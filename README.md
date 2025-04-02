@@ -88,7 +88,7 @@ A streamlined launcher script that handles the initial setup:
 Access it directly via: `irm bit.ly/mits-baseline-launcher | iex`
 ![Launcher Screenshot](images/SOS-Rename.gif)
 
-### SOS-Baseline.ps1 (Main Script)
+### MITS-Baseline.ps1 (Main Script)
 
 The primary script that performs all baseline operations. It includes comprehensive workstation configuration and ensures systems are properly secured and optimized.
 
@@ -116,11 +116,6 @@ Automates the process of checking for and installing Windows updates using the P
 
 Ensures all required PowerShell modules are properly installed and configured.
 
-### Deploy-SophosConnect.ps1
-
-Automates the deployment and configuration of Sophos Connect VPN client.
-
-
 ## Troubleshooting
 
 If you encounter issues during script execution:
@@ -142,3 +137,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Author
 
 Bill Ulrich
+Advance Business Systems
