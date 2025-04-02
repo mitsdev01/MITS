@@ -655,7 +655,7 @@ if ($user) {
 } else {
     Write-Host "Creating local mitsadmin & setting password to 'Never Expire'..." -NoNewline
     $Password = ConvertTo-SecureString "ChangeMe!" -AsPlainText -Force
-    New-LocalUser "mitsadmin" -Password $Password -FullName "SOSS Admin" -Description "mitsadmin Account" *> $null
+    New-LocalUser "mitsadmin" -Password $Password -FullName "MITS Admin" -Description "mitsadmin Account" *> $null
     $newUser = Get-LocalUser -Name 'mitsadmin' -ErrorAction SilentlyContinue
     if ($newUser) {
         $newUser | Set-LocalUser -PasswordNeverExpires $true
@@ -1574,7 +1574,7 @@ if ($SWNE) {
 
 Write-Delayed "Initiating cleaning up of Windows bloatware..." -NewLine:$false
 
-# Trigger SOS Debloat for Windows 11
+# Trigger MITS Debloat for Windows 11
 if (Is-Windows11) {
     try {
         $Win11DebloatURL = "https://advancestuff.hostedrmm.com/labtech/transfer/installers/MITS-Debloat.zip"
@@ -1599,14 +1599,14 @@ else {
 }
 
 
-# Trigger SOS Debloat for Windows 10
+# Trigger MITS Debloat for Windows 10
 if (Is-Windows10) {
     try {
-        $SOSDebloatURL = "https://advancestuff.hostedrmm.com/labtech/transfer/installers/MITS-Debloat.zip"
-        $SOSDebloatFile = "c:\temp\MITS-Debloat.zip"
-        Invoke-WebRequest -Uri $SOSDebloatURL -OutFile $SOSDebloatFile -UseBasicParsing -ErrorAction Stop 
+        $MITSDebloatURL = "https://advancestuff.hostedrmm.com/labtech/transfer/installers/MITS-Debloat.zip"
+        $MITSDebloatFile = "c:\temp\MITS-Debloat.zip"
+        Invoke-WebRequest -Uri $MITSDebloatURL -OutFile $MITSDebloatFile -UseBasicParsing -ErrorAction Stop 
         Start-Sleep -seconds 2
-        Expand-Archive $SOSDebloatFile -DestinationPath c:\temp\MITS-Debloat -Force
+        Expand-Archive $MITSDebloatFile -DestinationPath c:\temp\MITS-Debloat -Force
         Start-Sleep -Seconds 2
         Start-Process powershell -ArgumentList "-noexit","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -ShowKnownFileExt -Silent'"
         Start-Sleep -Seconds 2
@@ -1742,7 +1742,7 @@ function Set-UsoSvcAutomatic {
 Write-Delayed "Checking for Windows Updates..." -NewLine:$false
 Set-UsoSvcAutomatic
 $ProgressPreference = 'SilentlyContinue'
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/mitsdev01/SOS/refs/heads/main/Update_Windows.ps1" -OutFile "c:\temp\update_windows.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/mitsdev01/MITS/refs/heads/main/Update_Windows.ps1" -OutFile "c:\temp\update_windows.ps1"
 
 
 $ProgressPreference = 'Continue'
@@ -1786,7 +1786,7 @@ try {
 #region Rename Machine
 
 # Check if rename has already been performed by the launcher
-$trackerFilePath = "C:\temp\sos-rename-complete.flag"
+$trackerFilePath = "C:\temp\mits-rename-complete.flag"
 if (Test-Path -Path $trackerFilePath) {
     Write-Host "Machine rename already performed via launcher, skipping..." -NoNewline
     Write-TaskComplete
@@ -2047,7 +2047,7 @@ Write-Host -ForegroundColor "Red" $Padding
 Write-Host -ForegroundColor "Cyan" "Logs are available at:"
 Write-Host "  * $LogFile"
 Write-Host "  * $TempFolder\$env:COMPUTERNAME-baseline_transcript.txt"
-Invoke-WebRequest -uri "https://raw.githubusercontent.com/mitsdev01/SOS/main/BaselineComplete.ps1" -OutFile "c:\temp\BaselineComplete.ps1"
+Invoke-WebRequest -uri "https://raw.githubusercontent.com/mitsdev01/MITS/main/BaselineComplete.ps1" -OutFile "c:\temp\BaselineComplete.ps1"
 $scriptPath = "c:\temp\BaselineComplete.ps1"
 Invoke-Expression "start powershell -ArgumentList '-noexit','-File $scriptPath'"
 Write-Host " "
