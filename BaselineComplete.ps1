@@ -43,7 +43,7 @@ Clear-Host
 
 $ScriptVersion = "1.0.9"
 
-# Add Print-Middle function from SOS-Baseline3.ps1
+
 function Print-Middle($Message, $Color = "White") {
     # Get the console width
     $consoleWidth = [System.Console]::BufferWidth
@@ -66,7 +66,7 @@ function Print-Middle($Message, $Color = "White") {
 # Title Display using Print-Middle
 $Padding = ("=" * [System.Console]::BufferWidth)
 Write-Host -ForegroundColor Green $Padding
-Print-Middle "SOS - Workstation Baseline Verification" "Yellow"
+Print-Middle "MITS - Workstation Baseline Verification" "Yellow"
 Print-Middle "Version $ScriptVersion" "Yellow"
 Write-Host -ForegroundColor Green $Padding
 Write-Host ""
