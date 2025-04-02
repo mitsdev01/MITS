@@ -1,19 +1,19 @@
 ############################################################################################################
 #                                   MITS - Rename and Baseline Launcher                                     #
-#                                                 Version 1.0.5                                            #
+#                                                 Version 1.0.6                                            #
 ############################################################################################################
 #region Synopsis
 <#
 .SYNOPSIS
-    Initiates computer rename and schedules the SOS baseline script to run after reboot.
+    Initiates computer rename and schedules the MITS baseline script to run after reboot.
 
 .DESCRIPTION
     This script performs the following operations in sequence:
     - Prompts the user to rename the computer
-    - Creates a scheduled task to run the SOS baseline script after the next login
+    - Creates a scheduled task to run the MITS baseline script after the next login
     - Triggers an automatic system reboot
     
-    After reboot, the script will automatically launch the SOS baseline configuration
+    After reboot, the script will automatically launch the MITS baseline configuration
     when the specified user logs in.
 
 .PARAMETER UserName
@@ -21,19 +21,19 @@
     Default: current user
 
 .NOTES
-    Version:        1.0.5
+    Version:        1.0.6
     Author:         Bill Ulrich
     Creation Date:  4/1/2025
     Requires:       Administrator privileges
                     Windows 10/11 Professional
     
 .EXAMPLE
-    .\Rename-And-Baseline.ps1
+    .\BaselineLauncher.ps1
     
     Run the script with administrator privileges to rename the computer and schedule the baseline.
 
 .EXAMPLE
-    .\Rename-And-Baseline.ps1 -UserName "Administrator"
+    .\BaselineLauncher.ps1 -UserName "Administrator"
     
     Rename the computer and schedule the baseline to run when the Administrator logs in after reboot.
 
@@ -52,7 +52,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
-$ScriptVersion = "1.0.5"
+$ScriptVersion = "1.0.6"
 
 Start-Transcript -Path "c:\temp\baseline-launcher.log"
 
@@ -112,7 +112,7 @@ function Print-Center {
 # Display header
 Clear-Host
 Write-Host ("=" * [Console]::BufferWidth) -ForegroundColor Green
-Print-Center "SOS - Workstation Baseline Launcher"
+Print-Center "MITS - New Workstation Baseline Launcher"
 Print-Center "Version $ScriptVersion" "Yellow"
 Write-Host ("=" * [Console]::BufferWidth) -ForegroundColor Green
 Write-Host ""
@@ -135,19 +135,19 @@ while (-not $connected -and ((Get-Date) - $startTime).TotalSeconds -lt $timeout)
 }
 
 # Start a new PowerShell window and execute the baseline script
-Start-Process powershell.exe -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', "irm bit.ly/sos-baseline | iex" -WindowStyle Normal
+Start-Process powershell.exe -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', "irm bit.ly/mits-baseline | iex" -WindowStyle Normal
 
 # Remove this scheduled task after execution
-Unregister-ScheduledTask -TaskName "SOS-Baseline-Startup" -Confirm:$false
+Unregister-ScheduledTask -TaskName "MITS-Baseline-Startup" -Confirm:$false
 '@
 
 # Save the startup script to a file
-$startupScriptPath = "$tempFolder\SOS-Baseline-Startup.ps1"
+$startupScriptPath = "$tempFolder\MITS-Baseline-Startup.ps1"
 Set-Content -Path $startupScriptPath -Value $startupScript -Force
 Write-Log "Created startup script at $startupScriptPath"
 
 # Create tracker file to indicate rename was already attempted
-$trackerFilePath = "$tempFolder\sos-rename-complete.flag"
+$trackerFilePath = "$tempFolder\mits-rename-complete.flag"
 New-Item -Path $trackerFilePath -ItemType File -Force | Out-Null
 Write-Log "Created rename tracker file at $trackerFilePath"
 
@@ -331,7 +331,7 @@ try {
     Write-Delayed "Creating startup task for baseline script..." -NewLine:$false
 
     # Delete any existing task with the same name
-    Unregister-ScheduledTask -TaskName "SOS-Baseline-Startup" -Confirm:$false -ErrorAction SilentlyContinue
+    Unregister-ScheduledTask -TaskName "MITS-Baseline-Startup" -Confirm:$false -ErrorAction SilentlyContinue
 
     # Create the scheduled task
     $action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$startupScriptPath`""
@@ -343,10 +343,10 @@ try {
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -Hidden -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
     
     # Register the task
-    Register-ScheduledTask -TaskName "SOS-Baseline-Startup" -Action $action -Trigger $trigger -Settings $settings -RunLevel Highest -Force | Out-Null
+    Register-ScheduledTask -TaskName "MITS-Baseline-Startup" -Action $action -Trigger $trigger -Settings $settings -RunLevel Highest -Force | Out-Null
     
     Write-TaskComplete
-    Write-Log "Created scheduled task 'SOS-Baseline-Startup' to run after logon for user $UserName"
+    Write-Log "Created scheduled task 'MITS-Baseline-Startup' to run after logon for user $UserName"
 
     # Prepare for restart
     Write-Delayed "Preparing for system restart..." -NewLine:$false
