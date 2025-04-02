@@ -524,7 +524,7 @@ $originalCursorTop = [Console]::CursorTop
 #  Run the module check in the background and show spinner
 try {
     $job = Start-Job -ScriptBlock {
-        Invoke-Expression (Invoke-RestMethod "https://raw.githubusercontent.com/mitsdev01/SOS/refs/heads/main/Check-Modules.ps1")
+        Invoke-Expression (Invoke-RestMethod "https://raw.githubusercontent.com/mitsdev01/MITS/refs/heads/main/Check-Modules.ps1")
     }
     
     # Display the spinner while the job is running
