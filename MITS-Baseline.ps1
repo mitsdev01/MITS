@@ -641,30 +641,30 @@ while ($true) {
 # ---------------------------------------------------------------------
 # Configure Local Admin Account
 # ---------------------------------------------------------------------
-# Check if the user 'sossetup' exists
-$user = Get-LocalUser -Name 'sossetup' -ErrorAction SilentlyContinue
+# Check if the user 'mitsadmin' exists
+$user = Get-LocalUser -Name 'mitsadmin' -ErrorAction SilentlyContinue
 
 if ($user) {
     # Check if the password is set to 'Never Expire'
     if (-not $user.PasswordNeverExpires) {
-        Write-Delayed "Setting sossetup password to 'Never Expire'..." -NewLine:$false
+        Write-Delayed "Setting mitsadmin password to 'Never Expire'..." -NewLine:$false
         $user | Set-LocalUser -PasswordNeverExpires $true
         Write-TaskComplete
-        Write-Log "Set sossetup password to never expire"
+        Write-Log "Set mitsadmin password to never expire"
     }
 } else {
-    Write-Host "Creating local sossetup & setting password to 'Never Expire'..." -NoNewline
+    Write-Host "Creating local mitsadmin & setting password to 'Never Expire'..." -NoNewline
     $Password = ConvertTo-SecureString "ChangeMe!" -AsPlainText -Force
-    New-LocalUser "sossetup" -Password $Password -FullName "SOSS Admin" -Description "sossetup Account" *> $null
-    $newUser = Get-LocalUser -Name 'sossetup' -ErrorAction SilentlyContinue
+    New-LocalUser "mitsadmin" -Password $Password -FullName "SOSS Admin" -Description "mitsadmin Account" *> $null
+    $newUser = Get-LocalUser -Name 'mitsadmin' -ErrorAction SilentlyContinue
     if ($newUser) {
         $newUser | Set-LocalUser -PasswordNeverExpires $true
-        Add-LocalGroupMember -Group "Administrators" -Member "sossetup"
+        Add-LocalGroupMember -Group "Administrators" -Member "mitsadmin"
         Write-TaskComplete
-        Write-Log "Created sossetup local admin account with non-expiring password"
+        Write-Log "Created mitsadmin local admin account with non-expiring password"
     } else {
         Write-TaskFailed
-        Write-Log "Failed to create sossetup account"
+        Write-Log "Failed to create mitsadmin account"
     }
 }
 #endregion LocalAdminAccount
@@ -1577,13 +1577,13 @@ Write-Delayed "Initiating cleaning up of Windows bloatware..." -NewLine:$false
 # Trigger SOS Debloat for Windows 11
 if (Is-Windows11) {
     try {
-        $Win11DebloatURL = "https://axcientrestore.blob.core.windows.net/win11/SOS-Debloat.zip"
-        $Win11DebloatFile = "c:\temp\SOS-Debloat.zip"
+        $Win11DebloatURL = "https://advancestuff.hostedrmm.com/labtech/transfer/installers/MITS-Debloat.zip"
+        $Win11DebloatFile = "c:\temp\MITS-Debloat.zip"
         Invoke-WebRequest -Uri $Win11DebloatURL -OutFile $Win11DebloatFile -UseBasicParsing -ErrorAction Stop 
         Start-Sleep -seconds 2
-        Expand-Archive $Win11DebloatFile -DestinationPath 'c:\temp\SOS-Debloat'
+        Expand-Archive $Win11DebloatFile -DestinationPath 'c:\temp\MITS-Debloat'
         Start-Sleep -Seconds 2
-        Start-Process powershell -ArgumentList "-noexit","-Command Invoke-Expression -Command '& ''C:\temp\SOS-Debloat\SOS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -DisableLockscreenTips -DisableSuggestions -ShowKnownFileExt -TaskbarAlignLeft -HideSearchTb -DisableWidgets -Silent'"
+        Start-Process powershell -ArgumentList "-noexit","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -DisableLockscreenTips -DisableSuggestions -ShowKnownFileExt -TaskbarAlignLeft -HideSearchTb -DisableWidgets -Silent'"
         Start-Sleep -Seconds 2
         Add-Type -AssemblyName System.Windows.Forms
         [System.Windows.Forms.SendKeys]::SendWait('%{TAB}') 
@@ -1602,13 +1602,13 @@ else {
 # Trigger SOS Debloat for Windows 10
 if (Is-Windows10) {
     try {
-        $SOSDebloatURL = "https://axcientrestore.blob.core.windows.net/win11/SOS-Debloat.zip"
-        $SOSDebloatFile = "c:\temp\SOS-Debloat.zip"
+        $SOSDebloatURL = "https://advancestuff.hostedrmm.com/labtech/transfer/installers/MITS-Debloat.zip"
+        $SOSDebloatFile = "c:\temp\MITS-Debloat.zip"
         Invoke-WebRequest -Uri $SOSDebloatURL -OutFile $SOSDebloatFile -UseBasicParsing -ErrorAction Stop 
         Start-Sleep -seconds 2
-        Expand-Archive $SOSDebloatFile -DestinationPath c:\temp\SOS-Debloat -Force
+        Expand-Archive $SOSDebloatFile -DestinationPath c:\temp\MITS-Debloat -Force
         Start-Sleep -Seconds 2
-        Start-Process powershell -ArgumentList "-noexit","-Command Invoke-Expression -Command '& ''C:\temp\SOS-Debloat\SOS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -ShowKnownFileExt -Silent'"
+        Start-Process powershell -ArgumentList "-noexit","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -ShowKnownFileExt -Silent'"
         Start-Sleep -Seconds 2
         Add-Type -AssemblyName System.Windows.Forms
         [System.Windows.Forms.SendKeys]::SendWait('%{TAB}') 
