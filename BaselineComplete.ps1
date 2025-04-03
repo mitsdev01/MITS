@@ -42,6 +42,7 @@
 Clear-Host
 
 $ScriptVersion = "1.1.0"
+$ProgressPreference = "SilentlyContinue" 
 
 
 function Print-Middle($Message, $Color = "White") {
