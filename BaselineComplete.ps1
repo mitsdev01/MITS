@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - Workstation Baseline Verification                               #
-#                                                 Version 1.1.5                                             #
+#                                                 Version 1.1.6                                             #
 ############################################################################################################
 #region Synopsis
 <#
@@ -23,7 +23,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        1.1.5
+    Version:        1.1.6
     Author:         Bill Ulrich
     Creation Date:  3/25/2025
     Requires:       Administrator privileges
@@ -41,7 +41,7 @@
 
 Clear-Host
 
-$ScriptVersion = "1.1.5"
+$ScriptVersion = "1.1.6"
 $ProgressPreference = "SilentlyContinue" 
 
 
@@ -638,41 +638,73 @@ try {
     # Don't use spinner - just collect data directly
     Write-Host "Collecting power information..." -ForegroundColor Gray
     
-    # Get power plan info
+    # Get power plan info with error handling
     $powerCfg = powercfg /list
-    $activePlanLine = ($powerCfg | Select-String -Pattern "\*").Line
-    
-    # Extract just the plan name and GUID for cleaner display
-    if ($activePlanLine -match "Power Scheme GUID:\s*(.*?)\s*\((.*?)\)") {
-        $planGuid = $matches[1].Trim()
-        $planName = $matches[2].Trim()
-        Write-Host "Power Plan: " -NoNewline
-        Write-Host "$planName ($planGuid)" -ForegroundColor Cyan
+    if ($powerCfg) {
+        $activePlanLine = ($powerCfg | Select-String -Pattern "\*" -ErrorAction SilentlyContinue)
+        
+        if ($activePlanLine -and $activePlanLine.Line) {
+            # Extract just the plan name and GUID for cleaner display
+            if ($activePlanLine.Line -match "Power Scheme GUID:\s*(.*?)\s*\((.*?)\)") {
+                $planGuid = $matches[1].Trim()
+                $planName = $matches[2].Trim()
+                Write-Host "Power Plan: " -NoNewline
+                Write-Host "$planName ($planGuid)" -ForegroundColor Cyan
+            }
+            else {
+                Write-Host "Power Plan: " -NoNewline
+                Write-Host $activePlanLine.Line.Trim() -ForegroundColor Cyan
+            }
+        }
+        else {
+            Write-Host "Power Plan: " -NoNewline
+            Write-Host "Unable to determine active power plan" -ForegroundColor Yellow
+        }
     }
     else {
         Write-Host "Power Plan: " -NoNewline
-        Write-Host $activePlanLine.Trim() -ForegroundColor Cyan
+        Write-Host "Unable to retrieve power configuration" -ForegroundColor Yellow
     }
     
-    # Check sleep settings
-    $hibernateStatus = if (powercfg /a | Select-String -Pattern "Hibernation" | Select-String -Pattern "disabled") { "Disabled" } else { "Enabled" }
-    Write-Host "Hibernation: " -NoNewline
-    if ($hibernateStatus -eq "Disabled") {
-        Write-Host "Disabled" -ForegroundColor Green
+    # Check sleep settings with error handling
+    $hibernateCheck = powercfg /a
+    if ($hibernateCheck) {
+        $hibernateStatus = if ($hibernateCheck | Select-String -Pattern "Hibernation" -ErrorAction SilentlyContinue | Select-String -Pattern "disabled" -ErrorAction SilentlyContinue) { 
+            "Disabled" 
+        } 
+        else { 
+            "Enabled" 
+        }
+        
+        Write-Host "Hibernation: " -NoNewline
+        if ($hibernateStatus -eq "Disabled") {
+            Write-Host "Disabled" -ForegroundColor Green
+        }
+        else {
+            Write-Host "Enabled" -ForegroundColor Yellow
+        }
     }
     else {
-        Write-Host "Enabled" -ForegroundColor Yellow
+        Write-Host "Hibernation: " -NoNewline
+        Write-Host "Unable to determine status" -ForegroundColor Yellow
     }
     
-    # Fast startup
-    $fastStartupReg = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power" -Name "HiberbootEnabled" -ErrorAction SilentlyContinue
-    $fastStartup = if ($fastStartupReg -and $fastStartupReg.HiberbootEnabled -eq 0) { "Disabled" } else { "Enabled" }
-    Write-Host "Fast Startup: " -NoNewline
-    if ($fastStartup -eq "Disabled") {
-        Write-Host "Disabled" -ForegroundColor Green
+    # Fast startup with error handling
+    try {
+        $fastStartupReg = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power" -Name "HiberbootEnabled" -ErrorAction Stop
+        $fastStartup = if ($fastStartupReg -and $fastStartupReg.HiberbootEnabled -eq 0) { "Disabled" } else { "Enabled" }
+        
+        Write-Host "Fast Startup: " -NoNewline
+        if ($fastStartup -eq "Disabled") {
+            Write-Host "Disabled" -ForegroundColor Green
+        }
+        else {
+            Write-Host "Enabled" -ForegroundColor Yellow
+        }
     }
-    else {
-        Write-Host "Enabled" -ForegroundColor Yellow
+    catch {
+        Write-Host "Fast Startup: " -NoNewline
+        Write-Host "Unable to determine status" -ForegroundColor Yellow
     }
 }
 catch {
