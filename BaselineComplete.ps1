@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - Workstation Baseline Verification                             #
-#                                                 Version 1.1.7                                            #
+#                                                 Version 1.1.8                                            #
 ############################################################################################################
 #region Synopsis
 <#
@@ -23,7 +23,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        1.1.7
+    Version:        1.1.8
     Author:         Bill Ulrich
     Creation Date:  3/25/2025
     Requires:       Administrator privileges
@@ -41,7 +41,7 @@
 
 Clear-Host
 
-$ScriptVersion = "1.1.7"
+$ScriptVersion = "1.1.8"
 $ProgressPreference = "SilentlyContinue" 
 
 
@@ -263,17 +263,19 @@ $WarningPreference = "SilentlyContinue"
 $ErrorActionPreference = "Continue"
 
 # Install and import CommonStuff module
-$moduleName = "CommonStuff,FancyClearHost"
+$moduleNames = @("CommonStuff", "FancyClearHost")
 Write-Host "Checking for required modules..." -NoNewline
 
 try {
-    # Check if the module is installed
-    if (-not (Get-Module -ListAvailable -Name $moduleName)) {
-        Install-Module -Name $moduleName -Scope CurrentUser -AllowClobber -Force -ErrorAction Stop | Out-Null
+    foreach ($moduleName in $moduleNames) {
+        # Check if the module is installed
+        if (-not (Get-Module -ListAvailable -Name $moduleName)) {
+            Install-Module -Name $moduleName -Scope CurrentUser -AllowClobber -Force -ErrorAction Stop | Out-Null
+        }
+        
+        # Import the module
+        Import-Module -Name $moduleName -ErrorAction Stop
     }
-    
-    # Import the module
-    Import-Module -Name $moduleName -ErrorAction Stop
     Write-TaskComplete
 }
 catch {
@@ -769,5 +771,5 @@ else {
 
 Write-Host "`nReport generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
 Read-Host -Prompt "Press enter to exit"
-Clear-HostFancily -Mode Falling -Speed 0.2
+Clear-Host -Fancy -Mode Falling -Speed 0.2
 #Stop-Process -Id $PID -Force
