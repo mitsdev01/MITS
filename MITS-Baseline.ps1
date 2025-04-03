@@ -1893,9 +1893,9 @@ do {
 
 $validChoice = $false
 do {
-    $choice = Read-Host -Prompt "Do you want to join a domain or Azure AD? (A for Azure AD, S for domain)"
+    $choice = Read-Host -Prompt "Do you want to join a domain or Azure AD? (1 for Azure AD, 2 for domain)"
     switch ($choice) {
-        "S" {
+        "2" {
             $username = Read-Host -Prompt "Enter the username for the domain join operation"
             $password = Read-Host -Prompt "Enter the password for the domain join operation" -AsSecureString
             $cred = New-Object System.Management.Automation.PSCredential($username, $password)
@@ -1909,7 +1909,7 @@ do {
                 $validChoice = $true
             }
         }
-        "A" {
+        "1" {
             Write-Delayed "Starting Azure AD Join operation using Work or School account..." -NewLine:$true
             Start-Process "ms-settings:workplace"
             Start-Sleep -Seconds 3
@@ -1923,7 +1923,7 @@ do {
             $validChoice = $true
         }
         default {
-            Write-Delayed "Invalid choice. Please enter A or S." -NewLine:$true
+            Write-Delayed "Invalid choice. Please enter 1 or 2." -NewLine:$true
             $validChoice = $false
         }
     }
