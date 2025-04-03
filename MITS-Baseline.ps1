@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - New Workstation Baseline Script                                #
-#                                                 Version 12.0.3                                            #
+#                                                 Version 12.0.4                                            #
 ############################################################################################################
 <#
 .SYNOPSIS
@@ -21,7 +21,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        12.0.3
+    Version:        12.0.4
     Author:         Bill Ulrich
     Creation Date:  4/2/2025
     Requires:       Administrator privileges
@@ -44,7 +44,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Initial setup and version
-$ScriptVersion = "12.0.3"
+$ScriptVersion = "12.0.4"
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $TempFolder = "C:\temp"
@@ -834,15 +834,61 @@ Write-Log "Power profile configured to prevent sleep for all device types"
 
 #region SystemTime
 Write-Delayed "Setting EST as default timezone..." -NewLine:$false
-Start-Service W32Time
-Set-TimeZone -Id "Eastern Standard Time" 
-Write-TaskComplete
-Write-Log "Time zone set to Eastern Standard Time"
+
+# Initialize spinner
+$spinner = @('/', '-', '\', '|')
+$spinnerIndex = 0
+[Console]::Write($spinner[$spinnerIndex])
+
+# Perform timezone operations
+try {
+    Start-Service W32Time
+    Set-TimeZone -Id "Eastern Standard Time"
+    $success = $true
+} catch {
+    $success = $false
+    Write-Log "Error setting timezone: $_"
+}
+
+# Replace spinner with done/failed message
+[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+if ($success) {
+    # Use Write-Host for transcript logging
+    Write-Host " done." -ForegroundColor Green
+    Write-Log "Time zone set to Eastern Standard Time"
+} else {
+    # Use Write-Host for transcript logging
+    Write-Host " failed." -ForegroundColor Red
+    Write-Log "Failed to set time zone to Eastern Standard Time"
+}
 
 Write-Delayed "Syncing system clock..." -NewLine:$false
-w32tm /resync -ErrorAction SilentlyContinue | Out-Null
-Write-TaskComplete
-Write-Log "Synced system clock"
+
+# Initialize spinner
+$spinner = @('/', '-', '\', '|')
+$spinnerIndex = 0
+[Console]::Write($spinner[$spinnerIndex])
+
+# Sync system clock
+try {
+    w32tm /resync -ErrorAction SilentlyContinue | Out-Null
+    $success = $true
+} catch {
+    $success = $false
+    Write-Log "Error syncing system clock: $_"
+}
+
+# Replace spinner with done/failed message
+[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+if ($success) {
+    # Use Write-Host for transcript logging
+    Write-Host " done." -ForegroundColor Green
+    Write-Log "Synced system clock"
+} else {
+    # Use Write-Host for transcript logging
+    Write-Host " failed." -ForegroundColor Red
+    Write-Log "Failed to sync system clock"
+}
 #endregion System Time
 
 
