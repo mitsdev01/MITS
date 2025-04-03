@@ -163,20 +163,11 @@ function Write-Delayed {
     # Add to log file
     Write-Log "$Text"
     
-    # Write to transcript in one go (not character by character)
-    Write-Host $Text -NoNewline -ForegroundColor $Color
-    if ($NewLine) {
-        Write-Host ""
-    }
-    
-    # Clear the line where we just wrote to avoid duplication in console
+    # Save cursor position and console color
     $originalColor = [Console]::ForegroundColor
     [Console]::ForegroundColor = $Color
-    [Console]::SetCursorPosition(0, [Console]::CursorTop)
-    [Console]::Write("".PadRight([Console]::BufferWidth - 1))  # Clear the line
-    [Console]::SetCursorPosition(0, [Console]::CursorTop)
     
-    # Now do the visual character-by-character animation for the console only
+    # Do the visual character-by-character animation for the console
     foreach ($char in $Text.ToCharArray()) {
         [Console]::Write($char)
         Start-Sleep -Milliseconds 25
@@ -269,7 +260,7 @@ function Show-SpinningWait {
         [switch]$SuppressOutput = $false
     )
     
-    # Visual delayed writing (will also be included in transcript)
+    # Use our fixed Write-Delayed function for consistent output
     Write-Delayed "$Message" -NewLine:$false
     $spinner = @('/', '-', '\', '|')
     $spinnerIndex = 0
@@ -320,7 +311,7 @@ function Show-SpinnerWithProgressBar {
         [string]$DoneMessage = "done."
     )
     
-    # Visual delayed writing (will also be included in transcript)
+    # Use our fixed Write-Delayed function for consistent output
     Write-Delayed "$Message" -NewLine:$false
     
     # Create parent directory for output file if it doesn't exist
@@ -395,7 +386,7 @@ function Show-SpinnerAnimation {
     $originalCursorVisible = [Console]::CursorVisible
     [Console]::CursorVisible = $false
     
-    # Visual delayed writing (will also be included in transcript)
+    # Use our fixed Write-Delayed function for consistent output
     Write-Delayed $Message -NewLine:$false
     
     $job = Start-Job -ScriptBlock $ScriptBlock
@@ -450,10 +441,7 @@ function Connect-VPN {
             Write-Delayed "The 'Sonicwall NetExtender' adapter is not connected to the SSLVPN." -NewLine:$true
         }
     } else {
-        [Console]::ForegroundColor = [System.ConsoleColor]::Red
-        Write-Delayed "SonicWall NetExtender not found"
-        [Console]::ResetColor()
-        [Console]::WriteLine()
+        Write-Delayed "SonicWall NetExtender not found" -NewLine:$true -Color Red
     }
 }
 
@@ -1670,10 +1658,7 @@ $ProgressPreference = 'SilentlyContinue'
 try {
     Invoke-WebRequest -Uri "https://advancestuff.hostedrmm.com/labtech/transfer/installers/ssl-vpn.bat" -OutFile "c:\temp\ssl-vpn.bat"
 } catch {
-    [Console]::ForegroundColor = [System.ConsoleColor]::Red
-    Write-Delayed "Failed to download SSL VPN installer: $_"
-    [Console]::ResetColor()
-    [Console]::WriteLine()
+    Write-Delayed "Failed to download SSL VPN installer: $_" -NewLine:$true -Color Red
     exit 1
 }
 $ProgressPreference = 'Continue'
