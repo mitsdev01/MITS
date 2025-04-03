@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - Workstation Baseline Verification                             #
-#                                                 Version 1.1.8                                            #
+#                                                 Version 1.1.9                                            #
 ############################################################################################################
 #region Synopsis
 <#
@@ -23,7 +23,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        1.1.8
+    Version:        1.1.9
     Author:         Bill Ulrich
     Creation Date:  3/25/2025
     Requires:       Administrator privileges
