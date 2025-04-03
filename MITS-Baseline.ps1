@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - New Workstation Baseline Script                                #
-#                                                 Version 12.0.6                                            #
+#                                                 Version 12.0.5                                            #
 ############################################################################################################
 <#
 .SYNOPSIS
@@ -21,7 +21,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        12.0.6
+    Version:        12.0.5
     Author:         Bill Ulrich
     Creation Date:  4/2/2025
     Requires:       Administrator privileges
@@ -44,7 +44,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Initial setup and version
-$ScriptVersion = "12.0.6"
+$ScriptVersion = "12.0.5"
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $TempFolder = "C:\temp"
@@ -53,65 +53,6 @@ $LogFile = "$TempFolder\$env:COMPUTERNAME-baseline.log"
 $global:IsMobileDevice = $false
 
 Set-ExecutionPolicy RemoteSigned -Force *> $null
-
-# Get console handle
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-
-public class CursorHelper {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct CONSOLE_CURSOR_INFO {
-        public uint dwSize;
-        public bool bVisible;
-    }
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern IntPtr GetStdHandle(int nStdHandle);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern bool SetConsoleCursorInfo(IntPtr hConsoleOutput, ref CONSOLE_CURSOR_INFO cci);
-    
-    // For Windows Terminal and other VT-compatible terminals
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
-    
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
-}
-"@
-
-# Constants
-$STD_OUTPUT_HANDLE = -11
-$hConsole = [CursorHelper]::GetStdHandle($STD_OUTPUT_HANDLE)
-
-# For traditional console - set cursor to underscore (small size)
-$cursorInfo = New-Object CursorHelper+CONSOLE_CURSOR_INFO
-$cursorInfo.dwSize = 25  # Small size for underscore
-$cursorInfo.bVisible = $true
-
-[CursorHelper]::SetConsoleCursorInfo($hConsole, [ref]$cursorInfo)
-
-# For modern terminals that support VT sequences
-try {
-    # Try to enable VT processing
-    $ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
-    $currentMode = 0
-    [CursorHelper]::GetConsoleMode($hConsole, [ref]$currentMode)
-    [CursorHelper]::SetConsoleMode($hConsole, $currentMode -bor $ENABLE_VIRTUAL_TERMINAL_PROCESSING)
-    
-    # Use VT escape sequence to set cursor style to underscore
-    Write-Host "`e[4 q" -NoNewline
-} catch {
-    # Silently continue if this method fails
-}
-
-# Native PowerShell [Console] method as a fallback
-try {
-    [Console]::CursorSize = 25
-} catch {
-    # Silently continue if this method fails
-}
 
 # Set up termination handler for Ctrl+C and window closing
 $null = [Console]::TreatControlCAsInput = $true
@@ -2207,9 +2148,6 @@ $footerBorder
 $footerBorder
 "@
 Add-Content -Path $LogFile -Value $footer
-
-$cursorInfo.dwSize = 25  # or try 20–30 for different line thickness
-[CursorHelper]::SetConsoleCursorInfo($hConsole, [ref]$cursorInfo)
 
 Read-Host -Prompt "Press enter to exit"
 Stop-Process -Id $PID -Force
