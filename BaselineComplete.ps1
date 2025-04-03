@@ -205,7 +205,7 @@ function Show-SpinningWait {
     # Display spinner while job is running
     while ($job.State -eq 'Running') {
         [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 100
+        Start-Sleep -Milliseconds 50
         [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
         $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
     }
@@ -338,7 +338,7 @@ try {
         [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
         $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
         [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 100
+        Start-Sleep -Milliseconds 50
     }
     
     $Software = Get-InstalledSoftware | Where-Object { $_.DisplayName -ne $null } | 
@@ -387,7 +387,7 @@ try {
         [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
         $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
         [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 100
+        Start-Sleep -Milliseconds 50
     }
     
     $BitLockerVolume = Get-BitLockerVolume -MountPoint $env:SystemDrive -ErrorAction Stop
@@ -446,7 +446,7 @@ try {
         [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
         $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
         [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 100
+        Start-Sleep -Milliseconds 50
     }
     
     # Replace spinner with data
@@ -503,7 +503,7 @@ try {
         [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
         $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
         [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 100
+        Start-Sleep -Milliseconds 50
     }
     
     # Replace spinner with data
@@ -572,7 +572,7 @@ try {
         [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
         $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
         [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 100
+        Start-Sleep -Milliseconds 50
     }
     
     # Replace spinner with data
@@ -723,7 +723,7 @@ for ($i = 0; $i -lt 5; $i++) {
     [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
     [Console]::Write($spinner[$spinnerIndex])
-    Start-Sleep -Milliseconds 100
+    Start-Sleep -Milliseconds 50
 }
 
 # Replace spinner with data
