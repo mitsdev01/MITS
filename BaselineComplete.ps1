@@ -619,7 +619,7 @@ try {
     
     $powerCfg = powercfg /list
     $activePlan = ($powerCfg | Select-String -Pattern "\*").Line
-    Write-Host "Active Power Plan: " -NoNewline
+    Write-Host "Power Plan: " -NoNewline
     Write-Host $activePlan.Trim() -ForegroundColor Cyan
     
     # Check sleep settings
