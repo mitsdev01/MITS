@@ -448,7 +448,7 @@ function Connect-VPN {
 function Start-VssService {
     $vss = Get-Service -Name 'VSS' -ErrorAction SilentlyContinue
     if ($vss.Status -ne 'Running') {
-        Write-Delayed "Starting VSS service..." -NewLine:$false
+        Write-Delayed "Starting Volume Shadow Copy service for restore point creation..." -NewLine:$false
         Start-Service VSS
         Write-TaskComplete
     }
@@ -471,12 +471,12 @@ function Create-RestorePoint-WithTimeout {
     $completed = Wait-Job $job -Timeout $TimeoutSeconds
 
     if (-not $completed) {
-        Write-Error "[-] Restore point creation timed out after $TimeoutSeconds seconds. Stopping job..."
+        Write-Error "  [-] Restore point creation timed out after $TimeoutSeconds seconds. Stopping job..."
         Stop-Job $job -Force
         Remove-Job $job
     } else {
         Receive-Job $job
-        Write-Host "[+] Restore point created successfully." -ForegroundColor Green
+        Write-Host "  [+] Restore point created successfully." -ForegroundColor Green
         Remove-Job $job
     }
 }
@@ -1716,10 +1716,9 @@ if ($osType) {
 ############################################################################################################
 #region System Restore
 # Create a restore point
-Write-Delayed "Creating a system restore point..." -NewLine:$false
 Start-VssService
 Remove-RestorePointFrequencyLimit
-
+Write-Delayed "Creating a system restore point..." -NewLine:$false
 $description = "MITS New Workstation Baseline Completed - $(Get-Date -Format 'MM-dd-yyyy HH:mm:t')"
 Create-RestorePoint-WithTimeout -Description $description -TimeoutSeconds 90
 #endregion System Restore Point
