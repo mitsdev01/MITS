@@ -389,7 +389,7 @@ try {
     Write-Host ""
     
     # Restart the computer
-    #Stop-Transcript | Out-Null
+    # Stop-Transcript | Out-Null
     Restart-Computer -Force
 
 } catch {
