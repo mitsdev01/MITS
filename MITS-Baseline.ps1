@@ -28,7 +28,7 @@
                     Windows 10/11 Professional
     
 .EXAMPLE
-    .\MITS-Baseline.ps1
+    .\MITS-Baseline.ps1 
     
     Run the script with administrator privileges to execute the full baseline configuration.
 
