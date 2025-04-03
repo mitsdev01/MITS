@@ -49,8 +49,6 @@ Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope Curr
 Install-Module PowerShellGet -Force -AllowClobber -Scope CurrentUser | Out-Null
 Import-Module PowerShellGet -Force
 
-# Restore the original execution policy
-Set-ExecutionPolicy $originalExecutionPolicy -Scope Process -Force
 
 # Verify NuGet installation
 if (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue) {
@@ -58,3 +56,10 @@ if (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue) {
 } else {
     Write-Output "Failed to install NuGet package provider."
 }
+
+$ProgressPreference = 'SilentlyContinue'
+Install-Module -Name FancyClearHost -Force -Scope CurrentUser -ErrorAction SilentlyContinue | Out-Null
+
+# Restore the original execution policy
+Set-ExecutionPolicy $originalExecutionPolicy -Scope Process -Force
+$ProgressPreference = 'Continue'
