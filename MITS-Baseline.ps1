@@ -71,6 +71,13 @@ public class CursorHelper {
 
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool SetConsoleCursorInfo(IntPtr hConsoleOutput, ref CONSOLE_CURSOR_INFO cci);
+    
+    // For Windows Terminal and other VT-compatible terminals
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+    
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
 }
 "@
 
@@ -78,13 +85,33 @@ public class CursorHelper {
 $STD_OUTPUT_HANDLE = -11
 $hConsole = [CursorHelper]::GetStdHandle($STD_OUTPUT_HANDLE)
 
-# Set cursor size to 100 (block or underscore-style)
+# For traditional console - set cursor to underscore (small size)
 $cursorInfo = New-Object CursorHelper+CONSOLE_CURSOR_INFO
-$cursorInfo.dwSize = 100
+$cursorInfo.dwSize = 25  # Small size for underscore
 $cursorInfo.bVisible = $true
 
 [CursorHelper]::SetConsoleCursorInfo($hConsole, [ref]$cursorInfo)
 
+# For modern terminals that support VT sequences
+try {
+    # Try to enable VT processing
+    $ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+    $currentMode = 0
+    [CursorHelper]::GetConsoleMode($hConsole, [ref]$currentMode)
+    [CursorHelper]::SetConsoleMode($hConsole, $currentMode -bor $ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+    
+    # Use VT escape sequence to set cursor style to underscore
+    Write-Host "`e[4 q" -NoNewline
+} catch {
+    # Silently continue if this method fails
+}
+
+# Native PowerShell [Console] method as a fallback
+try {
+    [Console]::CursorSize = 25
+} catch {
+    # Silently continue if this method fails
+}
 
 # Set up termination handler for Ctrl+C and window closing
 $null = [Console]::TreatControlCAsInput = $true
