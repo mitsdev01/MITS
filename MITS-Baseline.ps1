@@ -152,6 +152,7 @@ function Print-Middle($Message, $Color = "White") {
     Write-Host (" " * [System.Math]::Floor(([System.Console]::BufferWidth / 2) - ($Message.Length / 2))) -NoNewline
     Write-Host -ForegroundColor $Color $Message
 }
+
 function Write-Delayed {
     param(
         [string]$Text, 
@@ -453,6 +454,42 @@ function Connect-VPN {
         Write-Delayed "SonicWall NetExtender not found"
         [Console]::ResetColor()
         [Console]::WriteLine()
+    }
+}
+
+function Start-VssService {
+    $vss = Get-Service -Name 'VSS' -ErrorAction SilentlyContinue
+    if ($vss.Status -ne 'Running') {
+        Write-Delayed "Starting VSS service..." -NewLine:$false
+        Start-Service VSS
+        Write-TaskComplete
+    }
+}
+
+
+function Remove-RestorePointFrequencyLimit {
+    $regPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore"
+    New-Item -Path $regPath -Force | Out-Null
+    Set-ItemProperty -Path $regPath -Name "SystemRestorePointCreationFrequency" -Value 0
+}
+
+function Create-RestorePoint-WithTimeout {
+    param (
+        [string]$Description,
+        [int]$TimeoutSeconds = 60
+    )
+
+    $job = Start-Job { Checkpoint-Computer -Description $using:Description -RestorePointType "MODIFY_SETTINGS" }
+    $completed = Wait-Job $job -Timeout $TimeoutSeconds
+
+    if (-not $completed) {
+        Write-Error "[-] Restore point creation timed out after $TimeoutSeconds seconds. Stopping job..."
+        Stop-Job $job -Force
+        Remove-Job $job
+    } else {
+        Receive-Job $job
+        Write-Host "[+] Restore point created successfully." -ForegroundColor Green
+        Remove-Job $job
     }
 }
 
@@ -1016,7 +1053,8 @@ if ($WindowsVer -and $TPM -and $BitLockerReadyDrive) {
 Write-Delayed "Enabling System Restore..." -NewLine:$false
 
 # Set RestorePoint Creation Frequency to 0 (allow multiple restore points)
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore" -Name "SystemRestorePointCreationFrequency" -Value 0 
+#Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore" -Name "SystemRestorePointCreationFrequency" -Value 0 
+Remove-RestorePointFrequencyLimit
 
 # Enable system restore
 Enable-ComputerRestore -Drive "C:\" -Confirm:$false
@@ -1699,6 +1737,20 @@ do {
 #endregion AD/AzureAD Join
 
 ############################################################################################################
+#                                           System Restore Point                                           #
+#                                                                                                          #
+############################################################################################################
+#region System Restore Point
+# Create a restore point
+Write-Delayed "Creating a system restore point..." -NewLine:$false
+Start-VssService
+Remove-RestorePointFrequencyLimit
+
+$description = "MITS New Workstation Baseline Completed - $(Get-Date -Format 'MM-dd-yyyy HH:mm:t')"
+Create-RestorePoint-WithTimeout -Description $description -TimeoutSeconds 90
+#endregion System Restore Point
+
+############################################################################################################
 #                                        Cleanup and Finalization                                        #
 #                                                                                                          #
 ############################################################################################################
@@ -1779,7 +1831,58 @@ try {
     Write-Log "Error creating WakeLock exit flag: $_"
 }
 
-############################################################################################################
+# Define temp files to clean up
+$TempFiles = @(
+    "c:\temp\MITS-Debloat.zip",
+    "c:\temp\MITS-Debloat",
+    "c:\temp\update_windows.ps1",
+    "c:\temp\BaselineComplete.ps1",
+    "C:\temp\AcroRdrDC2500120432_en_US.exe",
+    "c:\temp\$env:COMPUTERNAME-baseline.txt"
+)
+
+Write-Delayed "Cleaning up temporary files..." -NewLine:$false
+
+# Keep track of success for all deletions
+$allSuccessful = $true
+
+# Delete only specific temp files
+foreach ($file in $TempFiles) {
+    if (Test-Path $file) {
+        try {
+            if ((Get-Item $file) -is [System.IO.DirectoryInfo]) {
+                # It's a directory, use -Recurse
+                Remove-Item -Path $file -Recurse -Force -ErrorAction Stop
+            } else {
+                # It's a file
+                Remove-Item -Path $file -Force -ErrorAction Stop
+            }
+            Write-Log "Removed temporary file/folder: $file"
+        } catch {
+            $allSuccessful = $false
+            Write-Log "Failed to remove: $file - $($_.Exception.Message)"
+        }
+    }
+}
+
+# Don't remove the wakelock.flag until the very end
+if (Test-Path "c:\temp\wakelock.flag") {
+    Remove-Item -Path "c:\temp\wakelock.flag" -Force -ErrorAction SilentlyContinue
+}
+
+# Report success in console and log
+if ($allSuccessful) {
+    Write-TaskComplete
+} else {
+    Write-Host " completed with some errors." -ForegroundColor Yellow
+}
+
+Write-Log "Temporary file cleanup completed successfully."
+#endregion Baseline Cleanup
+
+
+
+<############################################################################################################
 #                                            Rename Machine                                                #
 #                                                                                                          #
 ############################################################################################################
@@ -1968,66 +2071,7 @@ else {
         Write-Log "Error in computer rename process: $_"
     }
 }
-
-# Create a restore point
-Write-Delayed "Creating a system restore point..." -NewLine:$false
-try {
-    Checkpoint-Computer -Description "MITS New Workstation Baseline Completed" -RestorePointType "APPLICATION_INSTALL" -ErrorAction Stop
-    Write-TaskComplete
-    Write-Log "System restore point created successfully`r"
-} catch {
-    Write-Host "An error occurred: $_" -ForegroundColor Red
-    Write-Log "Error creating system restore point: $_"
-}
-
-# Define temp files to clean up
-$TempFiles = @(
-    "c:\temp\MITS-Debloat.zip",
-    "c:\temp\MITS-Debloat",
-    "c:\temp\update_windows.ps1",
-    "c:\temp\BaselineComplete.ps1",
-    "C:\temp\AcroRdrDC2500120432_en_US.exe",
-    "c:\temp\$env:COMPUTERNAME-baseline.txt"
-)
-
-Write-Delayed "Cleaning up temporary files..." -NewLine:$false
-
-# Keep track of success for all deletions
-$allSuccessful = $true
-
-# Delete only specific temp files
-foreach ($file in $TempFiles) {
-    if (Test-Path $file) {
-        try {
-            if ((Get-Item $file) -is [System.IO.DirectoryInfo]) {
-                # It's a directory, use -Recurse
-                Remove-Item -Path $file -Recurse -Force -ErrorAction Stop
-            } else {
-                # It's a file
-                Remove-Item -Path $file -Force -ErrorAction Stop
-            }
-            Write-Log "Removed temporary file/folder: $file"
-        } catch {
-            $allSuccessful = $false
-            Write-Log "Failed to remove: $file - $($_.Exception.Message)"
-        }
-    }
-}
-
-# Don't remove the wakelock.flag until the very end
-if (Test-Path "c:\temp\wakelock.flag") {
-    Remove-Item -Path "c:\temp\wakelock.flag" -Force -ErrorAction SilentlyContinue
-}
-
-# Report success in console and log
-if ($allSuccessful) {
-    Write-TaskComplete
-} else {
-    Write-Host " completed with some errors." -ForegroundColor Yellow
-}
-
-Write-Log "Temporary file cleanup completed successfully."
-#endregion Baseline Cleanup
+#>
 
 ############################################################################################################
 #                                           Baseline Summary                                               #
