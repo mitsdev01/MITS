@@ -44,7 +44,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Initial setup and version
-$ScriptVersion = "12.0.6g"
+$ScriptVersion = "12.0.6h"
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $TempFolder = "C:\temp"
@@ -1719,8 +1719,60 @@ if ($osType) {
 Start-VssService
 Remove-RestorePointFrequencyLimit
 Write-Delayed "Creating a system restore point..." -NewLine:$false
-$description = "MITS New Workstation Baseline Completed - $(Get-Date -Format 'MM-dd-yyyy HH:mm:t')"
-Create-RestorePoint-WithTimeout -Description $description -TimeoutSeconds 90
+
+# Initialize spinner
+$spinner = @('/', '-', '\', '|')
+$spinnerIndex = 0
+[Console]::Write($spinner[$spinnerIndex])
+
+# Set up the job to create the restore point
+$job = Start-Job -ScriptBlock { 
+    Checkpoint-Computer -Description "MITS New Workstation Baseline Completed - $(Get-Date -Format 'MM-dd-yyyy HH:mm:t')" -RestorePointType "MODIFY_SETTINGS" 
+}
+
+# Display spinner while job is running (max 90 seconds)
+$timeout = 90
+$startTime = Get-Date
+$success = $false
+
+while (($job.State -eq 'Running') -and (((Get-Date) - $startTime).TotalSeconds -lt $timeout)) {
+    Start-Sleep -Milliseconds 100
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
+    [Console]::Write($spinner[$spinnerIndex])
+}
+
+# Check if job completed or timed out
+if ($job.State -eq 'Running') {
+    # Job timed out
+    Stop-Job $job
+    $success = $false
+} else {
+    # Job completed, check result
+    $result = Receive-Job $job
+    $success = $true
+}
+
+# Remove the job
+Remove-Job $job -Force
+
+# Clear the spinner character
+[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+
+# Display result
+if ($success) {
+    [Console]::ForegroundColor = [System.ConsoleColor]::Green
+    [Console]::Write(" Restore point created successfully.")
+    [Console]::ResetColor()
+    [Console]::WriteLine()
+    Write-Log "System restore point created successfully"
+} else {
+    [Console]::ForegroundColor = [System.ConsoleColor]::Red
+    [Console]::Write(" Failed to create restore point.")
+    [Console]::ResetColor()
+    [Console]::WriteLine()
+    Write-Log "Failed to create system restore point"
+}
 #endregion System Restore Point
 
 ############################################################################################################
