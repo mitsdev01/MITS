@@ -1844,66 +1844,6 @@ if (Test-Path "c:\temp\update_windows.ps1") {
     Write-Log "Windows Update execution failed!"
 }
 
-# Create WakeLock exit flag to stop the WakeLock script
-Write-Delayed "Creating WakeLock exit flag..." -NewLine:$false
-try {
-    # Create the flag file to signal the WakeLock script to exit
-    New-Item -Path "c:\temp\wakelock.flag" -ItemType File -Force | Out-Null
-    Write-TaskComplete
-    Write-Log "WakeLock flag file created to stop WakeLock script"
-} catch {
-    Write-Host "An error occurred: $_" -ForegroundColor Red
-    Write-Log "Error creating WakeLock exit flag: $_"
-}
-
-# Define temp files to clean up
-$TempFiles = @(
-    "c:\temp\MITS-Debloat.zip",
-    "c:\temp\MITS-Debloat",
-    "c:\temp\update_windows.ps1",
-    "c:\temp\BaselineComplete.ps1",
-    "C:\temp\AcroRdrDC2500120432_en_US.exe",
-    "c:\temp\$env:COMPUTERNAME-baseline.txt"
-)
-
-Write-Delayed "Cleaning up temporary files..." -NewLine:$false
-
-# Keep track of success for all deletions
-$allSuccessful = $true
-
-# Delete only specific temp files
-foreach ($file in $TempFiles) {
-    if (Test-Path $file) {
-        try {
-            if ((Get-Item $file) -is [System.IO.DirectoryInfo]) {
-                # It's a directory, use -Recurse
-                Remove-Item -Path $file -Recurse -Force -ErrorAction Stop
-            } else {
-                # It's a file
-                Remove-Item -Path $file -Force -ErrorAction Stop
-            }
-            Write-Log "Removed temporary file/folder: $file"
-        } catch {
-            $allSuccessful = $false
-            Write-Log "Failed to remove: $file - $($_.Exception.Message)"
-        }
-    }
-}
-
-# Don't remove the wakelock.flag until the very end
-if (Test-Path "c:\temp\wakelock.flag") {
-    Remove-Item -Path "c:\temp\wakelock.flag" -Force -ErrorAction SilentlyContinue
-}
-
-# Report success in console and log
-if ($allSuccessful) {
-    Write-TaskComplete
-} else {
-    Write-Host " completed with some errors." -ForegroundColor Yellow
-}
-
-Write-Log "Temporary file cleanup completed successfully."
-#endregion Baseline Cleanup
 
 ############################################################################################################
 #                                            LocalAD/AzureAD Join                                          #
@@ -1977,6 +1917,69 @@ do {
     }
 } while (-not $validChoice)
 #endregion AD/AzureAD Join
+
+
+# Create WakeLock exit flag to stop the WakeLock script
+Write-Delayed "Creating WakeLock exit flag..." -NewLine:$false
+try {
+    # Create the flag file to signal the WakeLock script to exit
+    New-Item -Path "c:\temp\wakelock.flag" -ItemType File -Force | Out-Null
+    Write-TaskComplete
+    Write-Log "WakeLock flag file created to stop WakeLock script"
+} catch {
+    Write-Host "An error occurred: $_" -ForegroundColor Red
+    Write-Log "Error creating WakeLock exit flag: $_"
+}
+
+# Define temp files to clean up
+$TempFiles = @(
+    "c:\temp\MITS-Debloat.zip",
+    "c:\temp\MITS-Debloat",
+    "c:\temp\update_windows.ps1",
+    "c:\temp\BaselineComplete.ps1",
+    "C:\temp\AcroRdrDC2500120432_en_US.exe",
+    "c:\temp\$env:COMPUTERNAME-baseline.txt"
+)
+
+Write-Delayed "Cleaning up temporary files..." -NewLine:$false
+
+# Keep track of success for all deletions
+$allSuccessful = $true
+
+# Delete only specific temp files
+foreach ($file in $TempFiles) {
+    if (Test-Path $file) {
+        try {
+            if ((Get-Item $file) -is [System.IO.DirectoryInfo]) {
+                # It's a directory, use -Recurse
+                Remove-Item -Path $file -Recurse -Force -ErrorAction Stop
+            } else {
+                # It's a file
+                Remove-Item -Path $file -Force -ErrorAction Stop
+            }
+            Write-Log "Removed temporary file/folder: $file"
+        } catch {
+            $allSuccessful = $false
+            Write-Log "Failed to remove: $file - $($_.Exception.Message)"
+        }
+    }
+}
+
+# Don't remove the wakelock.flag until the very end
+if (Test-Path "c:\temp\wakelock.flag") {
+    Remove-Item -Path "c:\temp\wakelock.flag" -Force -ErrorAction SilentlyContinue
+}
+
+# Report success in console and log
+if ($allSuccessful) {
+    Write-TaskComplete
+} else {
+    Write-Host " completed with some errors." -ForegroundColor Yellow
+}
+
+Write-Log "Temporary file cleanup completed successfully."
+#endregion Baseline Cleanup
+
 
 ############################################################################################################
 #                                           Baseline Summary                                               #
