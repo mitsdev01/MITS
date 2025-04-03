@@ -842,7 +842,19 @@ $spinnerIndex = 0
 
 # Perform timezone operations
 try {
+    # Update spinner more frequently during operation
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
+    [Console]::Write($spinner[$spinnerIndex])
+    Start-Sleep -Milliseconds 50
+    
     Start-Service W32Time
+    
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
+    [Console]::Write($spinner[$spinnerIndex])
+    Start-Sleep -Milliseconds 50
+    
     Set-TimeZone -Id "Eastern Standard Time"
     $success = $true
 } catch {
