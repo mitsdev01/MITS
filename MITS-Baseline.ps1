@@ -44,7 +44,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Initial setup and version
-$ScriptVersion = "12.0.6j"
+$ScriptVersion = "12.0.6k"
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $TempFolder = "C:\temp"
@@ -436,12 +436,12 @@ function Connect-VPN {
         Start-Sleep -Seconds 10
         $connectionProfile = Get-NetConnectionProfile -InterfaceAlias "Sonicwall NetExtender"
         if ($connectionProfile) {
-            Write-Delayed "The 'Sonicwall NetExtender' adapter is connected to the SSLVPN." -NewLine:$true
+            Write-Delayed "The 'Sonicwall NetExtender' adapter is connected to SSLVPN." -NewLine:$true
         } else {
-            Write-Delayed "The 'Sonicwall NetExtender' adapter is not connected to the SSLVPN." -NewLine:$true
+            Write-Delayed "The 'Sonicwall NetExtender' adapter is not connected to SSLVPN." -NewLine:$true
         }
     } else {
-        Write-Delayed "SonicWall NetExtender not found" -NewLine:$true -Color Red
+        Write-Delayed "SonicWall NetExtender not found!" -NewLine:$true -Color Red
     }
 }
 
@@ -1774,7 +1774,7 @@ Remove-Job $job -Force
 # Display result
 if ($success) {
     [Console]::ForegroundColor = [System.ConsoleColor]::Green
-    [Console]::Write(" Restore point created successfully.")
+    [Console]::Write(" created successfully.")
     [Console]::ResetColor()
     [Console]::WriteLine()
     Write-Log "System restore point created successfully"
@@ -1951,7 +1951,8 @@ $TempFiles = @(
     "c:\temp\BaselineComplete.ps1",
     "C:\temp\AcroRdrDC2500120432_en_US.exe",
     "c:\temp\$env:COMPUTERNAME-baseline.txt",
-    "c:\temp\ssl-vpn.bat" 
+    "c:\temp\ssl-vpn.bat",
+    "mits-rename-complete.flag" 
 )
 
 Write-Delayed "Cleaning up temporary files..." -NewLine:$false
