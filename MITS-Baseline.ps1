@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - New Workstation Baseline Script                                #
-#                                                 Version 12.0.6c                                            #
+#                                                 Version 12.0.6d                                            #
 ############################################################################################################
 <#
 .SYNOPSIS
@@ -21,7 +21,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        12.0.6c
+    Version:        12.0.6d
     Author:         Bill Ulrich
     Creation Date:  4/2/2025
     Requires:       Administrator privileges
@@ -44,7 +44,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Initial setup and version
-$ScriptVersion = "12.0.6c"
+$ScriptVersion = "12.0.6d"
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $TempFolder = "C:\temp"
@@ -1614,7 +1614,7 @@ if ($SWNE) {
     # Validate successful download by checking the file size
     $NEGUI = "C:\Program Files (x86)\SonicWall\SSL-VPN\NetExtender\NEGui.exe"
     $FileSize = (Get-Item $NEFilePath).Length
-    $ExpectedSize = 4788816 # in bytes 
+    $ExpectedSize = 8228864 # in bytes 
     if ($FileSize -eq $ExpectedSize) {
         Write-Delayed "Installing Sonicwall NetExtender..." -NewLine:$false
         start-process -filepath $NEFilePath /S -Wait
