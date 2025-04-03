@@ -54,6 +54,38 @@ $global:IsMobileDevice = $false
 
 Set-ExecutionPolicy RemoteSigned -Force *> $null
 
+# Get console handle
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+
+public class CursorHelper {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CONSOLE_CURSOR_INFO {
+        public uint dwSize;
+        public bool bVisible;
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr GetStdHandle(int nStdHandle);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool SetConsoleCursorInfo(IntPtr hConsoleOutput, ref CONSOLE_CURSOR_INFO cci);
+}
+"@
+
+# Constants
+$STD_OUTPUT_HANDLE = -11
+$hConsole = [CursorHelper]::GetStdHandle($STD_OUTPUT_HANDLE)
+
+# Set cursor size to 100 (block or underscore-style)
+$cursorInfo = New-Object CursorHelper+CONSOLE_CURSOR_INFO
+$cursorInfo.dwSize = 100
+$cursorInfo.bVisible = $true
+
+[CursorHelper]::SetConsoleCursorInfo($hConsole, [ref]$cursorInfo)
+
+
 # Set up termination handler for Ctrl+C and window closing
 $null = [Console]::TreatControlCAsInput = $true
 # Register termination handler
@@ -1661,7 +1693,7 @@ if (Is-Windows11) {
         
         # No need for Alt+Tab with hidden window
         Write-Log "Windows 11 Debloat started in background, running silently."
-        Start-Sleep -Seconds 2
+        Start-Sleep -Seconds 30
         Write-TaskComplete
     }
     catch {
@@ -1688,7 +1720,7 @@ if (Is-Windows10) {
         
         # No need for Alt+Tab with hidden window
         Write-Log "Windows 10 Debloat started in background, running silently."
-        Start-Sleep -Seconds 2
+        Start-Sleep -Seconds 30
         Write-TaskComplete
     }
     catch {
@@ -2148,6 +2180,9 @@ $footerBorder
 $footerBorder
 "@
 Add-Content -Path $LogFile -Value $footer
+
+$cursorInfo.dwSize = 25  # or try 20–30 for different line thickness
+[CursorHelper]::SetConsoleCursorInfo($hConsole, [ref]$cursorInfo)
 
 Read-Host -Prompt "Press enter to exit"
 Stop-Process -Id $PID -Force
