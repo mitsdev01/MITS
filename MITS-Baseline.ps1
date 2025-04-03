@@ -430,7 +430,7 @@ function Show-Spinner {
 }
 
 function Connect-VPN {
-    if (Test-Path 'C:\Program Files\SonicWall\SSL-VPN\NetExtender\NECLI.exe') {
+    if (Test-Path 'C:\Program Files\SonicWall\SSL-VPN\NetExtender\NXCLI.exe') {
         Write-Delayed "NetExtender detected successfully, starting connection..." -NewLine:$false
         Start-Process C:\temp\ssl-vpn.bat
         Start-Sleep -Seconds 10
