@@ -1359,7 +1359,7 @@ $agentIdValueName = "ID"
 # Check for existing LabTech agent
 if (Get-Service $agentName -ErrorAction SilentlyContinue) {
     [Console]::ForegroundColor = [System.ConsoleColor]::Cyan
-    [Console]::Write("ConnectWise Automate agent detected.")
+    [Console]::Write("Existing ConnectWise Automate installation found.")
 } elseif (Test-Path $agentPath) {
     [Console]::ForegroundColor = [System.ConsoleColor]::Red
     Write-Delayed "ConnectWise Automate agent files are present, but the service is not installed." -NewLine:$false
@@ -1408,7 +1408,7 @@ if ($null -ne $service) {
         # Get the agent ID
         $agentId = Get-ItemProperty -Path $agentIdKeyPath -Name $agentIdValueName -ErrorAction SilentlyContinue
         if ($null -ne $agentId) {
-            $LTAID = "Automate Agent ID:"
+            $LTAID = "`nExisting ConnectWise Automate Agent ID:"
             foreach ($Char in $LTAID.ToCharArray()) {
                 [Console]::Write("$Char")
                 Start-Sleep -Milliseconds 30
