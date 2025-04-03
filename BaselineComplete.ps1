@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - Workstation Baseline Verification                               #
-#                                                 Version 1.1.4                                             #
+#                                                 Version 1.1.5                                             #
 ############################################################################################################
 #region Synopsis
 <#
@@ -23,7 +23,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        1.1.4
+    Version:        1.1.5
     Author:         Bill Ulrich
     Creation Date:  3/25/2025
     Requires:       Administrator privileges
@@ -41,7 +41,7 @@
 
 Clear-Host
 
-$ScriptVersion = "1.1.4"
+$ScriptVersion = "1.1.5"
 $ProgressPreference = "SilentlyContinue" 
 
 
@@ -223,28 +223,38 @@ function Show-SpinningWait {
     return $result
 }
 
-# Add this helper function near the top with other function definitions
-function Set-SafeCursorPosition {
+# Replace the Set-SafeCursorPosition function with this simpler spinner implementation
+function Show-SimpleSpinner {
     param (
-        [int]$Left,
-        [int]$Top
+        [Parameter(Mandatory = $true)]
+        [ScriptBlock]$ScriptBlock,
+        [int]$Milliseconds = 100
     )
     
-    # Ensure left position is not negative
-    if ($Left -lt 0) { $Left = 0 }
+    # Spinner characters
+    $spinner = @('/', '-', '\', '|')
+    $spinnerIndex = 0
     
-    # Ensure we don't exceed buffer width
-    if ($Left -ge [Console]::BufferWidth) {
-        $Left = [Console]::BufferWidth - 1
+    # Start the script block as a job
+    $jobName = [Guid]::NewGuid().ToString()
+    $null = Start-Job -Name $jobName -ScriptBlock $ScriptBlock
+    
+    # Display spinner while job is running
+    while ((Get-Job -Name $jobName).State -eq 'Running') {
+        Write-Host "`r$($spinner[$spinnerIndex])" -NoNewline
+        Start-Sleep -Milliseconds $Milliseconds
+        $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
     }
     
-    # Set cursor position safely
-    try {
-        [Console]::SetCursorPosition($Left, $Top)
-    }
-    catch {
-        # If setting cursor position fails, just continue without error
-    }
+    # Clear the spinner
+    Write-Host "`r " -NoNewline
+    Write-Host "`r" -NoNewline
+    
+    # Get the job result
+    $result = Receive-Job -Name $jobName
+    Remove-Job -Name $jobName -Force
+    
+    return $result
 }
 
 # Main Script Logic
@@ -374,7 +384,7 @@ $spinnerIndex = 0
 try {
     # Run data collection with spinner animation
     for ($i = 0; $i -lt 3; $i++) {
-        Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+        [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
         $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
         [Console]::Write($spinner[$spinnerIndex])
         Start-Sleep -Milliseconds 100
@@ -383,9 +393,9 @@ try {
     $BitLockerVolume = Get-BitLockerVolume -MountPoint $env:SystemDrive -ErrorAction Stop
     
     # Replace spinner with data
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     [Console]::Write(" ")
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     
     if ($BitLockerVolume.ProtectionStatus -eq "On") {
         Write-Host "BitLocker Status: " -NoNewline
@@ -433,16 +443,16 @@ $spinnerIndex = 0
 try {
     # Run data collection with spinner animation
     for ($i = 0; $i -lt 4; $i++) {
-        Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+        [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
         $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
         [Console]::Write($spinner[$spinnerIndex])
         Start-Sleep -Milliseconds 100
     }
     
     # Replace spinner with data
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     [Console]::Write(" ")
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     
     # Get Domain Join Status
     Write-Host "Domain Status" -ForegroundColor Cyan
@@ -490,16 +500,16 @@ $spinnerIndex = 0
 try {
     # Run data collection with spinner animation
     for ($i = 0; $i -lt 4; $i++) {
-        Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+        [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
         $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
         [Console]::Write($spinner[$spinnerIndex])
         Start-Sleep -Milliseconds 100
     }
     
     # Replace spinner with data
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     [Console]::Write(" ")
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     
     # Antivirus Products
     Write-Host "Antivirus Products" -ForegroundColor Cyan
@@ -559,16 +569,16 @@ try {
     
     # Run data collection with spinner animation
     for ($i = 0; $i -lt 3; $i++) {
-        Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+        [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
         $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
         [Console]::Write($spinner[$spinnerIndex])
         Start-Sleep -Milliseconds 100
     }
     
     # Replace spinner with data
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     [Console]::Write(" ")
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     
     Write-Host "Windows Update Status" -ForegroundColor Cyan
     $updateService = Get-Service -Name wuauserv
@@ -624,24 +634,11 @@ catch {
 # Power Configuration
 Write-SectionHeader "Power Configuration"
 
-# Add spinner animation
-$spinnerIndex = 0
-[Console]::Write($spinner[$spinnerIndex])
-
 try {
-    # Run data collection with spinner animation
-    for ($i = 0; $i -lt 3; $i++) {
-        Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
-        $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
-        [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 100
-    }
+    # Don't use spinner - just collect data directly
+    Write-Host "Collecting power information..." -ForegroundColor Gray
     
-    # Replace spinner with data
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
-    [Console]::Write(" ")
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
-    
+    # Get power plan info
     $powerCfg = powercfg /list
     $activePlanLine = ($powerCfg | Select-String -Pattern "\*").Line
     
@@ -679,11 +676,6 @@ try {
     }
 }
 catch {
-    # Replace spinner with error message
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    
     Write-Host "Error retrieving power configuration: $($_.Exception.Message)" -ForegroundColor Red
 }
 
@@ -696,16 +688,16 @@ $spinnerIndex = 0
 
 # Run data collection with spinner animation
 for ($i = 0; $i -lt 5; $i++) {
-    Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
     [Console]::Write($spinner[$spinnerIndex])
     Start-Sleep -Milliseconds 100
 }
 
 # Replace spinner with data
-Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
 [Console]::Write(" ")
-Set-SafeCursorPosition ([Console]::CursorLeft - 1) ([Console]::CursorTop)
+[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
 
 # Determine overall status
 $totalTests = 6 # BitLocker, RMM, Office, Antivirus, Windows Update, Power Settings
