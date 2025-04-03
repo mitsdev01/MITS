@@ -41,7 +41,7 @@
 
 Clear-Host
 
-$ScriptVersion = "1.1.8"
+$ScriptVersion = "1.1.9"
 $ProgressPreference = "SilentlyContinue" 
 
 
