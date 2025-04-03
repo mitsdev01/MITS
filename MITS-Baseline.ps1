@@ -1938,7 +1938,8 @@ $TempFiles = @(
     "c:\temp\update_windows.ps1",
     "c:\temp\BaselineComplete.ps1",
     "C:\temp\AcroRdrDC2500120432_en_US.exe",
-    "c:\temp\$env:COMPUTERNAME-baseline.txt"
+    "c:\temp\$env:COMPUTERNAME-baseline.txt",
+    "c:\temp\ssl-vpn.bat" 
 )
 
 Write-Delayed "Cleaning up temporary files..." -NewLine:$false
