@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - New Workstation Baseline Script                                #
-#                                                 Version 12.0.6b                                            #
+#                                                 Version 12.0.6c                                            #
 ############################################################################################################
 <#
 .SYNOPSIS
@@ -21,7 +21,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        12.0.6b
+    Version:        12.0.6c
     Author:         Bill Ulrich
     Creation Date:  4/2/2025
     Requires:       Administrator privileges
@@ -44,7 +44,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Initial setup and version
-$ScriptVersion = "12.0.6b"
+$ScriptVersion = "12.0.6c"
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $TempFolder = "C:\temp"
