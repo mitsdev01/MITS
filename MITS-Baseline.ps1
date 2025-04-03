@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - New Workstation Baseline Script                                #
-#                                                 Version 12.0.4                                            #
+#                                                 Version 12.0.5                                            #
 ############################################################################################################
 <#
 .SYNOPSIS
@@ -21,7 +21,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        12.0.4
+    Version:        12.0.5
     Author:         Bill Ulrich
     Creation Date:  4/2/2025
     Requires:       Administrator privileges
@@ -44,7 +44,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Initial setup and version
-$ScriptVersion = "12.0.4"
+$ScriptVersion = "12.0.5"
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $TempFolder = "C:\temp"
@@ -1655,11 +1655,13 @@ if (Is-Windows11) {
         Start-Sleep -seconds 2
         Expand-Archive $Win11DebloatFile -DestinationPath 'c:\temp\MITS-Debloat'
         Start-Sleep -Seconds 2
-        Start-Process powershell -ArgumentList "-noexit","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -DisableLockscreenTips -DisableSuggestions -ShowKnownFileExt -TaskbarAlignLeft -HideSearchTb -DisableWidgets -Silent'"
+        
+        # Launch the debloat script without creating a second window
+        Start-Process powershell -ArgumentList "-WindowStyle Hidden","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -DisableLockscreenTips -DisableSuggestions -ShowKnownFileExt -TaskbarAlignLeft -HideSearchTb -DisableWidgets -Silent'"
+        
+        # No need for Alt+Tab with hidden window
+        Write-Log "Windows 11 Debloat started in background, running silently."
         Start-Sleep -Seconds 2
-        Add-Type -AssemblyName System.Windows.Forms
-        [System.Windows.Forms.SendKeys]::SendWait('%{TAB}') 
-        Write-Log "Windows 11 Debloat completed successfully."
         Write-TaskComplete
     }
     catch {
@@ -1680,11 +1682,13 @@ if (Is-Windows10) {
         Start-Sleep -seconds 2
         Expand-Archive $MITSDebloatFile -DestinationPath c:\temp\MITS-Debloat -Force
         Start-Sleep -Seconds 2
-        Start-Process powershell -ArgumentList "-noexit","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -ShowKnownFileExt -Silent'"
+        
+        # Launch the debloat script without creating a second window
+        Start-Process powershell -ArgumentList "-WindowStyle Hidden","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -ShowKnownFileExt -Silent'"
+        
+        # No need for Alt+Tab with hidden window
+        Write-Log "Windows 10 Debloat started in background, running silently."
         Start-Sleep -Seconds 2
-        Add-Type -AssemblyName System.Windows.Forms
-        [System.Windows.Forms.SendKeys]::SendWait('%{TAB}') 
-        Write-Log "Windows 10 Debloat completed successfully."
         Write-TaskComplete
     }
     catch {
