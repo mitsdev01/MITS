@@ -21,7 +21,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        12.0.6j
+    Version:        12.0.6k
     Author:         Bill Ulrich
     Creation Date:  4/2/2025
     Requires:       Administrator privileges
