@@ -454,7 +454,6 @@ function Start-VssService {
     }
 }
 
-
 function Remove-RestorePointFrequencyLimit {
     $regPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore"
     New-Item -Path $regPath -Force | Out-Null
@@ -537,7 +536,7 @@ Start-Sleep -Seconds 2
 # Start baseline
 
 # Baseline log file
-#Write-Log "Automated workstation baseline has started"
+Write-Log "Automated workstation baseline has started"
 
 # Check for required modules
 Write-Host "`nPreparing required modules..." -NoNewline

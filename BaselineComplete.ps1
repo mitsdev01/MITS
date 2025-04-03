@@ -263,7 +263,7 @@ $WarningPreference = "SilentlyContinue"
 $ErrorActionPreference = "Continue"
 
 # Install and import CommonStuff module
-$moduleName = "CommonStuff"
+$moduleName = "CommonStuff,FancyClearHost"
 Write-Host "Checking for required modules..." -NoNewline
 
 try {
@@ -769,4 +769,5 @@ else {
 
 Write-Host "`nReport generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
 Read-Host -Prompt "Press enter to exit"
+Clear-HostFancily -Mode Falling -Speed 0.5
 #Stop-Process -Id $PID -Force
