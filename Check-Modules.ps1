@@ -1,11 +1,11 @@
 ############################################################################################################
-#                                     SOS - PowerShell Module Verification                                   #
+#                                     MITS - PowerShell Module Verification                                   #
 #                                                 Version 1.0.0                                             #
 ############################################################################################################
 #region Synopsis
 <#
 .SYNOPSIS
-    Verifies and installs required PowerShell module dependencies for SOS scripts.
+    Verifies and installs required PowerShell module dependencies for MITS scripts.
 
 .DESCRIPTION
     This script ensures the proper configuration of PowerShell module dependencies, including:
@@ -34,7 +34,7 @@
     Run the script to verify and install required PowerShell module dependencies.
 
 .LINK
-    https://github.com/mitsdev01/SOS
+    https://github.com/mitsdev01/MITS
 #>
 
 # Set execution policy to bypass for this session
