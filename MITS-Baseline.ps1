@@ -1618,6 +1618,7 @@ if ($SWNE) {
     if ($FileSize -eq $ExpectedSize) {
         Write-Delayed "Installing Sonicwall NetExtender..." -NewLine:$false
         start-process -filepath $NEFilePath /S -Wait
+        Write-TaskComplete
         if (Test-Path $NEGui) {
             Write-Log "Sonicwall NetExtender installation completed successfully."
             [Console]::ForegroundColor = [System.ConsoleColor]::Green
