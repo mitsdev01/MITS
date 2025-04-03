@@ -619,9 +619,19 @@ try {
     [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
     
     $powerCfg = powercfg /list
-    $activePlan = ($powerCfg | Select-String -Pattern "\*").Line
-    Write-Host "Power Plan: " -NoNewline
-    Write-Host $activePlan.Trim() -ForegroundColor Cyan
+    $activePlanLine = ($powerCfg | Select-String -Pattern "\*").Line
+    
+    # Extract just the plan name and GUID for cleaner display
+    if ($activePlanLine -match "Power Scheme GUID:\s*(.*?)\s*\((.*?)\)") {
+        $planGuid = $matches[1].Trim()
+        $planName = $matches[2].Trim()
+        Write-Host "Power Plan: " -NoNewline
+        Write-Host "$planName ($planGuid)" -ForegroundColor Cyan
+    }
+    else {
+        Write-Host "Power Plan: " -NoNewline
+        Write-Host $activePlanLine.Trim() -ForegroundColor Cyan
+    }
     
     # Check sleep settings
     $hibernateStatus = if (powercfg /a | Select-String -Pattern "Hibernation" | Select-String -Pattern "disabled") { "Disabled" } else { "Enabled" }
