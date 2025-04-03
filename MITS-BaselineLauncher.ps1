@@ -54,7 +54,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 $ScriptVersion = "1.0.6"
 
-Start-Transcript -Path "c:\temp\baseline-launcher.log"
+#Start-Transcript -Path "c:\temp\baseline-launcher.log"
 
 # Create a temporary directory if it doesn't exist
 $tempFolder = "C:\temp"
@@ -135,7 +135,7 @@ while (-not $connected -and ((Get-Date) - $startTime).TotalSeconds -lt $timeout)
 }
 
 # Start a new PowerShell window and execute the baseline script
-Start-Process powershell.exe -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', "irm bit.ly/mits-baseline | iex" -WindowStyle Normal
+Start-Process powershell.exe -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', "irm bit.ly/mits-baseline-v3 | iex" -WindowStyle Normal
 
 # Remove this scheduled task after execution
 Unregister-ScheduledTask -TaskName "MITS-Baseline-Startup" -Confirm:$false
@@ -389,7 +389,7 @@ try {
     Write-Host ""
     
     # Restart the computer
-    Stop-Transcript | Out-Null
+    #Stop-Transcript | Out-Null
     Restart-Computer -Force
 
 } catch {
