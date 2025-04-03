@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - Workstation Baseline Verification                               #
-#                                                 Version 1.1.6                                             #
+#                                                 Version 1.1.7                                             #
 ############################################################################################################
 #region Synopsis
 <#
@@ -23,7 +23,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        1.1.6
+    Version:        1.1.7
     Author:         Bill Ulrich
     Creation Date:  3/25/2025
     Requires:       Administrator privileges
@@ -41,7 +41,7 @@
 
 Clear-Host
 
-$ScriptVersion = "1.1.6"
+$ScriptVersion = "1.1.7"
 $ProgressPreference = "SilentlyContinue" 
 
 
@@ -636,35 +636,12 @@ Write-SectionHeader "Power Configuration"
 
 try {
     # Don't use spinner - just collect data directly
-    Write-Host "Collecting power information..." -ForegroundColor Gray
+    Write-Host "Collecting power plan information..." -ForegroundColor Gray
     
-    # Get power plan info with error handling
     $powerCfg = powercfg /list
-    if ($powerCfg) {
-        $activePlanLine = ($powerCfg | Select-String -Pattern "\*" -ErrorAction SilentlyContinue)
-        
-        if ($activePlanLine -and $activePlanLine.Line) {
-            # Extract just the plan name and GUID for cleaner display
-            if ($activePlanLine.Line -match "Power Scheme GUID:\s*(.*?)\s*\((.*?)\)") {
-                $planGuid = $matches[1].Trim()
-                $planName = $matches[2].Trim()
-                Write-Host "Power Plan: " -NoNewline
-                Write-Host "$planName ($planGuid)" -ForegroundColor Cyan
-            }
-            else {
-                Write-Host "Power Plan: " -NoNewline
-                Write-Host $activePlanLine.Line.Trim() -ForegroundColor Cyan
-            }
-        }
-        else {
-            Write-Host "Power Plan: " -NoNewline
-            Write-Host "Unable to determine active power plan" -ForegroundColor Yellow
-        }
-    }
-    else {
-        Write-Host "Power Plan: " -NoNewline
-        Write-Host "Unable to retrieve power configuration" -ForegroundColor Yellow
-    }
+    $activePlan = ($powerCfg | Select-String -Pattern "\*").Line
+    #Write-Host "Power Plan: " -NoNewline
+    Write-Host $activePlan.Trim() -ForegroundColor Cyan
     
     # Check sleep settings with error handling
     $hibernateCheck = powercfg /a
