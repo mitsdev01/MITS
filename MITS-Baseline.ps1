@@ -1713,7 +1713,7 @@ if ($osType) {
 #                                           System Restore Point                                           #
 #                                                                                                          #
 ############################################################################################################
-#region System Restore Point
+#region System Restore
 # Create a restore point
 Write-Delayed "Creating a system restore point..." -NewLine:$false
 Start-VssService
@@ -1927,22 +1927,41 @@ do {
 #endregion AD/AzureAD Join
 
 ############################################################################################################
-#                                             SCRIPT COMPLETION                                            #
+#                                           Baseline Summary                                               #
 #                                                                                                          #
 ############################################################################################################
-#region Completion
+#region Summary
+# Display Baseline Summary
+Write-Host ""
+$Padding = ("=" * [System.Console]::BufferWidth)
+# Visual formatting
+Write-Host -ForegroundColor "Red" $Padding
+Print-Middle "MITS Baseline Script Completed Successfully" "Green"
+Print-Middle "Reboot recommended to finalize changes" "Yellow"
+Write-Host -ForegroundColor "Red" $Padding
 
-[Console]::WriteLine()
-Write-Host "########################################################" -ForegroundColor Green
-Write-Host "#    MITS New Workstation Baseline completed!          #" -ForegroundColor Green
-Write-Host "########################################################" -ForegroundColor Green
-Write-Log "MITS New Workstation Baseline completed!"
+# Visual formatting
+Write-Host -ForegroundColor "Cyan" "Logs are available at:"
+Write-Host "  * $LogFile"
+Write-Host "  * $TempFolder\$env:COMPUTERNAME-baseline_transcript.txt"
+Invoke-WebRequest -uri "https://raw.githubusercontent.com/mitsdev01/MITS/main/BaselineComplete.ps1" -OutFile "c:\temp\BaselineComplete.ps1"
+$scriptPath = "c:\temp\BaselineComplete.ps1"
+Invoke-Expression "start powershell -ArgumentList '-noexit','-File $scriptPath'"
+Write-Host " "
+Write-Host " "
+#endregion Summary
+
+# Stopping transcript
+Stop-Transcript *> $null
+
+# Update log file with completion
+Write-Log "Automated workstation baseline has completed successfully"
 
 # Add footer to log file
-$footerBorder = "#" * 100
+$footerBorder = "=" * 80
 $footer = @"
 $footerBorder
-# MITS New Workstation Baseline completed successfully at 
+                Baseline Configuration Completed Successfully
                       $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 $footerBorder
 "@
@@ -1950,6 +1969,4 @@ Add-Content -Path $LogFile -Value $footer
 
 Read-Host -Prompt "Press enter to exit"
 Stop-Process -Id $PID -Force
-
-
 
