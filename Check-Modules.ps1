@@ -1,11 +1,11 @@
 ############################################################################################################
-#                                     SOS - PowerShell Module Verification                                   #
+#                                     MITS - PowerShell Module Verification                                   #
 #                                                 Version 1.0.0                                             #
 ############################################################################################################
 #region Synopsis
 <#
 .SYNOPSIS
-    Verifies and installs required PowerShell module dependencies for SOS scripts.
+    Verifies and installs required PowerShell module dependencies for MITS scripts.
 
 .DESCRIPTION
     This script ensures the proper configuration of PowerShell module dependencies, including:
@@ -34,7 +34,7 @@
     Run the script to verify and install required PowerShell module dependencies.
 
 .LINK
-    https://github.com/mitsdev01/SOS
+    https://github.com/mitsdev01/MITS
 #>
 
 # Set execution policy to bypass for this session
@@ -49,8 +49,6 @@ Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope Curr
 Install-Module PowerShellGet -Force -AllowClobber -Scope CurrentUser | Out-Null
 Import-Module PowerShellGet -Force
 
-# Restore the original execution policy
-Set-ExecutionPolicy $originalExecutionPolicy -Scope Process -Force
 
 # Verify NuGet installation
 if (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue) {
@@ -58,3 +56,10 @@ if (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue) {
 } else {
     Write-Output "Failed to install NuGet package provider."
 }
+
+$ProgressPreference = 'SilentlyContinue'
+Install-Module -Name FancyClearHost -Force -Scope CurrentUser -ErrorAction SilentlyContinue | Out-Null
+
+# Restore the original execution policy
+Set-ExecutionPolicy $originalExecutionPolicy -Scope Process -Force
+$ProgressPreference = 'Continue'

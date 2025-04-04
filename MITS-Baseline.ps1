@@ -1,7 +1,8 @@
 ############################################################################################################
-#                                     MITS - New Workstation Baseline Script                                #
-#                                                 Version 12.0.3                                            #
+#                                     MITS - New Workstation Baseline Script                               #
+#                                                 Version 12.0.7                                          #
 ############################################################################################################
+#region Synopsis
 <#
 .SYNOPSIS
     Automates the configuration and deployment of a standardized Windows workstation environment.
@@ -21,14 +22,14 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        12.0.3
+    Version:        12.0.7
     Author:         Bill Ulrich
     Creation Date:  4/2/2025
     Requires:       Administrator privileges
                     Windows 10/11 Professional
     
 .EXAMPLE
-    .\MITS-Baseline.ps1
+    .\MITS-Baseline.ps1 
     
     Run the script with administrator privileges to execute the full baseline configuration.
 
@@ -44,7 +45,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Initial setup and version
-$ScriptVersion = "12.0.3"
+$ScriptVersion = "12.0.7"
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $TempFolder = "C:\temp"
@@ -163,20 +164,11 @@ function Write-Delayed {
     # Add to log file
     Write-Log "$Text"
     
-    # Write to transcript in one go (not character by character)
-    Write-Host $Text -NoNewline -ForegroundColor $Color
-    if ($NewLine) {
-        Write-Host ""
-    }
-    
-    # Clear the line where we just wrote to avoid duplication in console
+    # Save cursor position and console color
     $originalColor = [Console]::ForegroundColor
     [Console]::ForegroundColor = $Color
-    [Console]::SetCursorPosition(0, [Console]::CursorTop)
-    [Console]::Write("".PadRight([Console]::BufferWidth - 1))  # Clear the line
-    [Console]::SetCursorPosition(0, [Console]::CursorTop)
     
-    # Now do the visual character-by-character animation for the console only
+    # Do the visual character-by-character animation for the console
     foreach ($char in $Text.ToCharArray()) {
         [Console]::Write($char)
         Start-Sleep -Milliseconds 25
@@ -269,7 +261,7 @@ function Show-SpinningWait {
         [switch]$SuppressOutput = $false
     )
     
-    # Visual delayed writing (will also be included in transcript)
+    # Use our fixed Write-Delayed function for consistent output
     Write-Delayed "$Message" -NewLine:$false
     $spinner = @('/', '-', '\', '|')
     $spinnerIndex = 0
@@ -320,7 +312,7 @@ function Show-SpinnerWithProgressBar {
         [string]$DoneMessage = "done."
     )
     
-    # Visual delayed writing (will also be included in transcript)
+    # Use our fixed Write-Delayed function for consistent output
     Write-Delayed "$Message" -NewLine:$false
     
     # Create parent directory for output file if it doesn't exist
@@ -395,7 +387,7 @@ function Show-SpinnerAnimation {
     $originalCursorVisible = [Console]::CursorVisible
     [Console]::CursorVisible = $false
     
-    # Visual delayed writing (will also be included in transcript)
+    # Use our fixed Write-Delayed function for consistent output
     Write-Delayed $Message -NewLine:$false
     
     $job = Start-Job -ScriptBlock $ScriptBlock
@@ -439,33 +431,29 @@ function Show-Spinner {
 }
 
 function Connect-VPN {
-    if (Test-Path 'C:\Program Files (x86)\SonicWall\SSL-VPN\NetExtender\NECLI.exe') {
+    if (Test-Path 'C:\Program Files\SonicWall\SSL-VPN\NetExtender\NXCLI.exe') {
         Write-Delayed "NetExtender detected successfully, starting connection..." -NewLine:$false
         Start-Process C:\temp\ssl-vpn.bat
         Start-Sleep -Seconds 10
         $connectionProfile = Get-NetConnectionProfile -InterfaceAlias "Sonicwall NetExtender"
         if ($connectionProfile) {
-            Write-Delayed "The 'Sonicwall NetExtender' adapter is connected to the SSLVPN." -NewLine:$true
+            Write-Delayed "The 'Sonicwall NetExtender' adapter is connected to SSLVPN." -NewLine:$true
         } else {
-            Write-Delayed "The 'Sonicwall NetExtender' adapter is not connected to the SSLVPN." -NewLine:$true
+            Write-Delayed "The 'Sonicwall NetExtender' adapter is not connected to SSLVPN." -NewLine:$true
         }
     } else {
-        [Console]::ForegroundColor = [System.ConsoleColor]::Red
-        Write-Delayed "SonicWall NetExtender not found"
-        [Console]::ResetColor()
-        [Console]::WriteLine()
+        Write-Delayed "SonicWall NetExtender not found!" -NewLine:$true -Color Red
     }
 }
 
 function Start-VssService {
     $vss = Get-Service -Name 'VSS' -ErrorAction SilentlyContinue
     if ($vss.Status -ne 'Running') {
-        Write-Delayed "Starting VSS service..." -NewLine:$false
+        Write-Delayed "Starting Volume Shadow Copy service for restore point creation..." -NewLine:$false
         Start-Service VSS
         Write-TaskComplete
     }
 }
-
 
 function Remove-RestorePointFrequencyLimit {
     $regPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore"
@@ -483,12 +471,12 @@ function Create-RestorePoint-WithTimeout {
     $completed = Wait-Job $job -Timeout $TimeoutSeconds
 
     if (-not $completed) {
-        Write-Error "[-] Restore point creation timed out after $TimeoutSeconds seconds. Stopping job..."
+        Write-Error "  [-] Restore point creation timed out after $TimeoutSeconds seconds. Stopping job..."
         Stop-Job $job -Force
         Remove-Job $job
     } else {
         Receive-Job $job
-        Write-Host "[+] Restore point created successfully." -ForegroundColor Green
+        Write-Host "  [+] Restore point created successfully." -ForegroundColor Green
         Remove-Job $job
     }
 }
@@ -549,7 +537,7 @@ Start-Sleep -Seconds 2
 # Start baseline
 
 # Baseline log file
-#Write-Log "Automated workstation baseline has started"
+Write-Log "Automated workstation baseline has started"
 
 # Check for required modules
 Write-Host "`nPreparing required modules..." -NoNewline
@@ -846,15 +834,73 @@ Write-Log "Power profile configured to prevent sleep for all device types"
 
 #region SystemTime
 Write-Delayed "Setting EST as default timezone..." -NewLine:$false
-Start-Service W32Time
-Set-TimeZone -Id "Eastern Standard Time" 
-Write-TaskComplete
-Write-Log "Time zone set to Eastern Standard Time"
+
+# Initialize spinner
+$spinner = @('/', '-', '\', '|')
+$spinnerIndex = 0
+[Console]::Write($spinner[$spinnerIndex])
+
+# Perform timezone operations
+try {
+    # Update spinner more frequently during operation
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
+    [Console]::Write($spinner[$spinnerIndex])
+    Start-Sleep -Milliseconds 50
+    
+    Start-Service W32Time
+    
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
+    [Console]::Write($spinner[$spinnerIndex])
+    Start-Sleep -Milliseconds 50
+    
+    Set-TimeZone -Id "Eastern Standard Time"
+    $success = $true
+} catch {
+    $success = $false
+    Write-Log "Error setting timezone: $_"
+}
+
+# Replace spinner with done/failed message
+[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+if ($success) {
+    # Use Write-Host for transcript logging
+    Write-Host " done." -ForegroundColor Green
+    Write-Log "Time zone set to Eastern Standard Time"
+} else {
+    # Use Write-Host for transcript logging
+    Write-Host " failed." -ForegroundColor Red
+    Write-Log "Failed to set time zone to Eastern Standard Time"
+}
 
 Write-Delayed "Syncing system clock..." -NewLine:$false
-w32tm /resync -ErrorAction SilentlyContinue | Out-Null
-Write-TaskComplete
-Write-Log "Synced system clock"
+
+# Initialize spinner
+$spinner = @('/', '-', '\', '|')
+$spinnerIndex = 0
+[Console]::Write($spinner[$spinnerIndex])
+
+# Sync system clock
+try {
+    w32tm /resync -ErrorAction SilentlyContinue | Out-Null
+    $success = $true
+} catch {
+    $success = $false
+    Write-Log "Error syncing system clock: $_"
+}
+
+# Replace spinner with done/failed message
+[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+if ($success) {
+    # Use Write-Host for transcript logging
+    Write-Host " done." -ForegroundColor Green
+    Write-Log "Synced system clock"
+} else {
+    # Use Write-Host for transcript logging
+    Write-Host " failed." -ForegroundColor Red
+    Write-Log "Failed to sync system clock"
+}
 #endregion System Time
 
 
@@ -1325,7 +1371,7 @@ $agentIdValueName = "ID"
 # Check for existing LabTech agent
 if (Get-Service $agentName -ErrorAction SilentlyContinue) {
     [Console]::ForegroundColor = [System.ConsoleColor]::Cyan
-    [Console]::Write("ConnectWise Automate agent detected.")
+    [Console]::Write("Existing ConnectWise Automate installation found.")
 } elseif (Test-Path $agentPath) {
     [Console]::ForegroundColor = [System.ConsoleColor]::Red
     Write-Delayed "ConnectWise Automate agent files are present, but the service is not installed." -NewLine:$false
@@ -1374,7 +1420,7 @@ if ($null -ne $service) {
         # Get the agent ID
         $agentId = Get-ItemProperty -Path $agentIdKeyPath -Name $agentIdValueName -ErrorAction SilentlyContinue
         if ($null -ne $agentId) {
-            $LTAID = "Automate Agent ID:"
+            $LTAID = "`nConnectWise Automate Agent ID:"
             foreach ($Char in $LTAID.ToCharArray()) {
                 [Console]::Write("$Char")
                 Start-Sleep -Milliseconds 30
@@ -1580,10 +1626,11 @@ if ($SWNE) {
     # Validate successful download by checking the file size
     $NEGUI = "C:\Program Files (x86)\SonicWall\SSL-VPN\NetExtender\NEGui.exe"
     $FileSize = (Get-Item $NEFilePath).Length
-    $ExpectedSize = 4788816 # in bytes 
+    $ExpectedSize = 8234392 # in bytes 
     if ($FileSize -eq $ExpectedSize) {
         Write-Delayed "Installing Sonicwall NetExtender..." -NewLine:$false
         start-process -filepath $NEFilePath /S -Wait
+        Write-TaskComplete
         if (Test-Path $NEGui) {
             Write-Log "Sonicwall NetExtender installation completed successfully."
             [Console]::ForegroundColor = [System.ConsoleColor]::Green
@@ -1612,142 +1659,132 @@ if ($SWNE) {
 
 Write-Delayed "Initiating cleaning up of Windows bloatware..." -NewLine:$false
 
-# Trigger MITS Debloat for Windows 11
+# Initialize spinner animation
+$spinner = @('/', '-', '\', '|')
+$spinnerIndex = 0
+[Console]::Write($spinner[$spinnerIndex])
+
+# Determine which Windows version and set up background debloat task
 if (Is-Windows11) {
     try {
         $Win11DebloatURL = "https://advancestuff.hostedrmm.com/labtech/transfer/installers/MITS-Debloat.zip"
         $Win11DebloatFile = "c:\temp\MITS-Debloat.zip"
         Invoke-WebRequest -Uri $Win11DebloatURL -OutFile $Win11DebloatFile -UseBasicParsing -ErrorAction Stop 
-        Start-Sleep -seconds 2
-        Expand-Archive $Win11DebloatFile -DestinationPath 'c:\temp\MITS-Debloat'
-        Start-Sleep -Seconds 2
-        Start-Process powershell -ArgumentList "-noexit","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -DisableLockscreenTips -DisableSuggestions -ShowKnownFileExt -TaskbarAlignLeft -HideSearchTb -DisableWidgets -Silent'"
-        Start-Sleep -Seconds 2
-        Add-Type -AssemblyName System.Windows.Forms
-        [System.Windows.Forms.SendKeys]::SendWait('%{TAB}') 
-        Write-Log "Windows 11 Debloat completed successfully."
-        Write-TaskComplete
+        
+        Expand-Archive $Win11DebloatFile -DestinationPath 'c:\temp\MITS-Debloat' -Force
+        
+        # Launch the debloat script without creating a second window
+        Start-Process powershell -ArgumentList "-WindowStyle Hidden","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -DisableLockscreenTips -DisableSuggestions -ShowKnownFileExt -TaskbarAlignLeft -HideSearchTb -DisableWidgets -Silent'"
+        
+        Write-Log "Windows 11 Debloat started in background, running silently."
+        $osType = "Windows 11"
     }
     catch {
         Write-Error "An error occurred: $($Error[0].Exception.Message)"
     }
 }
-else {
-    #Write-Log "This script is intended to run only on Windows 11."
-}
-
-
-# Trigger MITS Debloat for Windows 10
-if (Is-Windows10) {
+elseif (Is-Windows10) {
     try {
         $MITSDebloatURL = "https://advancestuff.hostedrmm.com/labtech/transfer/installers/MITS-Debloat.zip"
         $MITSDebloatFile = "c:\temp\MITS-Debloat.zip"
         Invoke-WebRequest -Uri $MITSDebloatURL -OutFile $MITSDebloatFile -UseBasicParsing -ErrorAction Stop 
-        Start-Sleep -seconds 2
+        
         Expand-Archive $MITSDebloatFile -DestinationPath c:\temp\MITS-Debloat -Force
-        Start-Sleep -Seconds 2
-        Start-Process powershell -ArgumentList "-noexit","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -ShowKnownFileExt -Silent'"
-        Start-Sleep -Seconds 2
-        Add-Type -AssemblyName System.Windows.Forms
-        [System.Windows.Forms.SendKeys]::SendWait('%{TAB}') 
-        Write-Log "Windows 10 Debloat completed successfully."
-        Write-TaskComplete
+        
+        # Launch the debloat script without creating a second window
+        Start-Process powershell -ArgumentList "-WindowStyle Hidden","-Command Invoke-Expression -Command '& ''C:\temp\MITS-Debloat\MITS-Debloat.ps1'' -RemoveApps -DisableBing -RemoveGamingApps -ClearStart -ShowKnownFileExt -Silent'"
+        
+        Write-Log "Windows 10 Debloat started in background, running silently."
+        $osType = "Windows 10"
     }
     catch {
         Write-Error "An error occurred: $($Error[0].Exception.Message)"
     }
 }
-#endregion Bloatware Cleanup
 
-#region AD/AzureAD Join
-############################################################################################################
-#                                            LocalAD/AzureAD Join                                          #
-#                                                                                                          #
-############################################################################################################
-#
-Write-Delayed "Starting Domain/AzureAD Join Task..." -NewLine:$true
-$ProgressPreference = 'SilentlyContinue'
-try {
-    Invoke-WebRequest -Uri "https://advancestuff.hostedrmm.com/labtech/transfer/installers/ssl-vpn.bat" -OutFile "c:\temp\ssl-vpn.bat"
-} catch {
-    [Console]::ForegroundColor = [System.ConsoleColor]::Red
-    Write-Delayed "Failed to download SSL VPN installer: $_"
-    [Console]::ResetColor()
-    [Console]::WriteLine()
-    exit 1
+# Show spinner animation for 30 seconds while debloat runs in background
+$startTime = Get-Date
+$duration = New-TimeSpan -Seconds 30
+while ((Get-Date) - $startTime -lt $duration) {
+    Start-Sleep -Milliseconds 250
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
+    [Console]::Write($spinner[$spinnerIndex])
 }
-$ProgressPreference = 'Continue'
 
-$validChoice = $false
-do {
-    $choice = Read-Host -Prompt "Do you want to connect to SSL VPN? (Y/N)"
-    switch ($choice) {
-        "Y" {
-            Connect-VPN
-            $validChoice = $true
-        }
-        "N" {
-            Write-Delayed "Skipping VPN Connection Setup..." -NewLine:$true
-            $validChoice = $true
-        }
-        default {
-            Write-Delayed "Invalid choice. Please enter Y or N." -NewLine:$true
-            $validChoice = $false
-        }
-    }
-} while (-not $validChoice)
+# Replace spinner with done message
+[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+Write-Host " done." -ForegroundColor Green
 
-$validChoice = $false
-do {
-    $choice = Read-Host -Prompt "Do you want to join a domain or Azure AD? (A for Azure AD, S for domain)"
-    switch ($choice) {
-        "S" {
-            $username = Read-Host -Prompt "Enter the username for the domain join operation"
-            $password = Read-Host -Prompt "Enter the password for the domain join operation" -AsSecureString
-            $cred = New-Object System.Management.Automation.PSCredential($username, $password)
-            $domain = Read-Host -Prompt "Enter the domain name for the domain join operation"
-            try {
-                Add-Computer -DomainName $domain -Credential $cred 
-                Write-Delayed "Domain join operation completed successfully." -NewLine:$true
-                $validChoice = $true
-            } catch {
-                Write-Delayed "Failed to join the domain." -NewLine:$true
-                $validChoice = $true
-            }
-        }
-        "A" {
-            Write-Delayed "Starting Azure AD Join operation using Work or School account..." -NewLine:$true
-            Start-Process "ms-settings:workplace"
-            Start-Sleep -Seconds 3
-            $output = dsregcmd /status | Out-String
-            if ($output -match 'AzureAdJoined\s+:\s+(YES|NO)') {
-                $azureAdJoinedValue = $matches[1]
-            } else {
-                $azureAdJoinedValue = "Not Found"
-            }
-            Write-Delayed "AzureADJoined: $azureAdJoinedValue" -NewLine:$true
-            $validChoice = $true
-        }
-        default {
-            Write-Delayed "Invalid choice. Please enter A or S." -NewLine:$true
-            $validChoice = $false
-        }
-    }
-} while (-not $validChoice)
-#endregion AD/AzureAD Join
+# Log completion
+if ($osType) {
+    Write-Log "$osType Debloat running in background"
+}
+#endregion Bloatware Cleanup
 
 ############################################################################################################
 #                                           System Restore Point                                           #
 #                                                                                                          #
 ############################################################################################################
-#region System Restore Point
+#region System Restore
 # Create a restore point
-Write-Delayed "Creating a system restore point..." -NewLine:$false
 Start-VssService
 Remove-RestorePointFrequencyLimit
+Write-Delayed "Creating a system restore point..." -NewLine:$false
 
-$description = "MITS New Workstation Baseline Completed - $(Get-Date -Format 'MM-dd-yyyy HH:mm:t')"
-Create-RestorePoint-WithTimeout -Description $description -TimeoutSeconds 90
+# Initialize spinner
+$spinner = @('/', '-', '\', '|')
+$spinnerIndex = 0
+[Console]::Write($spinner[$spinnerIndex])
+
+# Set up the job to create the restore point
+$job = Start-Job -ScriptBlock { 
+    Checkpoint-Computer -Description "MITS New Workstation Baseline Completed - $(Get-Date -Format 'MM-dd-yyyy HH:mm:t')" -RestorePointType "MODIFY_SETTINGS" 
+}
+
+# Display spinner while job is running (max 90 seconds)
+$timeout = 90
+$startTime = Get-Date
+$success = $false
+
+while (($job.State -eq 'Running') -and (((Get-Date) - $startTime).TotalSeconds -lt $timeout)) {
+    Start-Sleep -Milliseconds 100
+    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
+    [Console]::Write($spinner[$spinnerIndex])
+}
+
+# Check if job completed or timed out
+if ($job.State -eq 'Running') {
+    # Job timed out
+    Stop-Job $job
+    $success = $false
+} else {
+    # Job completed, check result
+    $result = Receive-Job $job
+    $success = $true
+}
+
+# Remove the job
+Remove-Job $job -Force
+
+# Clear the spinner character
+[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+
+# Display result
+if ($success) {
+    [Console]::ForegroundColor = [System.ConsoleColor]::Green
+    [Console]::Write(" created successfully.")
+    [Console]::ResetColor()
+    [Console]::WriteLine()
+    Write-Log "System restore point created successfully"
+} else {
+    [Console]::ForegroundColor = [System.ConsoleColor]::Red
+    [Console]::Write(" Failed to create restore point.")
+    [Console]::ResetColor()
+    [Console]::WriteLine()
+    Write-Log "Failed to create system restore point"
+}
 #endregion System Restore Point
 
 ############################################################################################################
@@ -1819,6 +1856,81 @@ if (Test-Path "c:\temp\update_windows.ps1") {
     Write-Log "Windows Update execution failed!"
 }
 
+
+############################################################################################################
+#                                            LocalAD/AzureAD Join                                          #
+#                                                                                                          #
+############################################################################################################
+#region AD/AzureAD Join
+Write-Delayed "Starting Domain/AzureAD Join Task..." -NewLine:$true
+$ProgressPreference = 'SilentlyContinue'
+try {
+    Invoke-WebRequest -Uri "https://advancestuff.hostedrmm.com/labtech/transfer/installers/ssl-vpn.bat" -OutFile "c:\temp\ssl-vpn.bat"
+} catch {
+    Write-Delayed "Failed to download SSL VPN installer: $_" -NewLine:$true -Color Red
+    exit 1
+}
+$ProgressPreference = 'Continue'
+
+$validChoice = $false
+do {
+    $choice = Read-Host -Prompt "Do you want to connect to SSL VPN? (Y/N)"
+    switch ($choice) {
+        "Y" {
+            Connect-VPN
+            $validChoice = $true
+        }
+        "N" {
+            Write-Delayed "Skipping VPN Connection Setup..." -NewLine:$true
+            $validChoice = $true
+        }
+        default {
+            Write-Delayed "Invalid choice. Please enter Y or N." -NewLine:$true
+            $validChoice = $false
+        }
+    }
+} while (-not $validChoice)
+
+$validChoice = $false
+do {
+    $choice = Read-Host -Prompt "Do you want to join a domain or Azure AD? (1 for Azure AD, 2 for domain)"
+    switch ($choice) {
+        "2" {
+            $username = Read-Host -Prompt "Enter the username for the domain join operation"
+            $password = Read-Host -Prompt "Enter the password for the domain join operation" -AsSecureString
+            $cred = New-Object System.Management.Automation.PSCredential($username, $password)
+            $domain = Read-Host -Prompt "Enter the domain name for the domain join operation"
+            try {
+                Add-Computer -DomainName $domain -Credential $cred 
+                Write-Delayed "Domain join operation completed successfully." -NewLine:$true
+                $validChoice = $true
+            } catch {
+                Write-Delayed "Failed to join the domain." -NewLine:$true
+                $validChoice = $true
+            }
+        }
+        "1" {
+            Write-Delayed "Starting Azure AD Join operation using Work or School account..." -NewLine:$true
+            Start-Process "ms-settings:workplace"
+            Start-Sleep -Seconds 3
+            $output = dsregcmd /status | Out-String
+            if ($output -match 'AzureAdJoined\s+:\s+(YES|NO)') {
+                $azureAdJoinedValue = $matches[1]
+            } else {
+                $azureAdJoinedValue = "Not Found"
+            }
+            Write-Delayed "AzureADJoined: $azureAdJoinedValue" -NewLine:$true
+            $validChoice = $true
+        }
+        default {
+            Write-Delayed "Invalid choice. Please enter 1 or 2." -NewLine:$true
+            $validChoice = $false
+        }
+    }
+} while (-not $validChoice)
+#endregion AD/AzureAD Join
+
+
 # Create WakeLock exit flag to stop the WakeLock script
 Write-Delayed "Creating WakeLock exit flag..." -NewLine:$false
 try {
@@ -1838,7 +1950,9 @@ $TempFiles = @(
     "c:\temp\update_windows.ps1",
     "c:\temp\BaselineComplete.ps1",
     "C:\temp\AcroRdrDC2500120432_en_US.exe",
-    "c:\temp\$env:COMPUTERNAME-baseline.txt"
+    "c:\temp\$env:COMPUTERNAME-baseline.txt",
+    "c:\temp\ssl-vpn.bat",
+    "mits-rename-complete.flag" 
 )
 
 Write-Delayed "Cleaning up temporary files..." -NewLine:$false
@@ -1880,198 +1994,6 @@ if ($allSuccessful) {
 Write-Log "Temporary file cleanup completed successfully."
 #endregion Baseline Cleanup
 
-
-
-<############################################################################################################
-#                                            Rename Machine                                                #
-#                                                                                                          #
-############################################################################################################
-#region Rename Machine
-
-# Check if rename has already been performed by the launcher
-$trackerFilePath = "C:\temp\mits-rename-complete.flag"
-if (Test-Path -Path $trackerFilePath) {
-    Write-Host "Machine rename already performed via launcher, skipping..." -NoNewline
-    Write-TaskComplete
-    Write-Log "Machine rename skipped - tracker file found at $trackerFilePath"
-} 
-else {
-    # Rename machine functionality with GUI prompt
-    Write-Delayed "Prompting for new machine rename..." -NewLine:$false
-    try {
-        # Load required assemblies for GUI
-        Add-Type -AssemblyName System.Windows.Forms
-        Add-Type -AssemblyName System.Drawing
-
-        # Add P/Invoke declarations for setting window position and foreground
-        Add-Type -TypeDefinition @"
-        using System;
-        using System.Runtime.InteropServices;
-        
-        public class ForegroundWindow {
-            [DllImport("user32.dll")]
-            [return: MarshalAs(UnmanagedType.Bool)]
-            public static extern bool SetForegroundWindow(IntPtr hWnd);
-            
-            [DllImport("user32.dll")]
-            public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-            
-            [DllImport("user32.dll", SetLastError = true)]
-            public static extern bool BringWindowToTop(IntPtr hWnd);
-            
-            [DllImport("user32.dll")]
-            public static extern IntPtr GetForegroundWindow();
-            
-            [DllImport("user32.dll")]
-            public static extern bool FlashWindow(IntPtr hwnd, bool bInvert);
-
-            [DllImport("user32.dll")]
-            public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-            
-            public const int GWL_EXSTYLE = -20;
-            public const int WS_EX_TOPMOST = 0x0008;
-        }
-"@
-
-        # Create form
-        $form = New-Object System.Windows.Forms.Form
-        $form.Text = "Rename Machine"
-        $form.Size = New-Object System.Drawing.Size(400, 200)
-        $form.StartPosition = "CenterScreen"
-        $form.FormBorderStyle = "FixedDialog"
-        $form.MaximizeBox = $false
-        $form.MinimizeBox = $false
-        $form.TopMost = $true
-        
-        # Create label
-        $label = New-Object System.Windows.Forms.Label
-        $label.Location = New-Object System.Drawing.Point(10, 20)
-        $label.Size = New-Object System.Drawing.Size(380, 20)
-        $label.Text = "Enter new machine name (15 characters max, no spaces):"
-        $form.Controls.Add($label)
-
-        # Create textbox
-        $textBox = New-Object System.Windows.Forms.TextBox
-        $textBox.Location = New-Object System.Drawing.Point(10, 50)
-        $textBox.Size = New-Object System.Drawing.Size(360, 20)
-        $textBox.MaxLength = 15
-        $textBox.Text = $env:COMPUTERNAME
-        $form.Controls.Add($textBox)
-
-        # Create status label
-        $statusLabel = New-Object System.Windows.Forms.Label
-        $statusLabel.Location = New-Object System.Drawing.Point(10, 80)
-        $statusLabel.Size = New-Object System.Drawing.Size(380, 20)
-        $statusLabel.ForeColor = [System.Drawing.Color]::Red
-        $form.Controls.Add($statusLabel)
-
-        # Create OK button
-        $okButton = New-Object System.Windows.Forms.Button
-        $okButton.Location = New-Object System.Drawing.Point(75, 120)
-        $okButton.Size = New-Object System.Drawing.Size(100, 30)
-        $okButton.Text = "Rename"
-        $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
-        $form.Controls.Add($okButton)
-        $form.AcceptButton = $okButton
-
-        # Create Cancel button
-        $cancelButton = New-Object System.Windows.Forms.Button
-        $cancelButton.Location = New-Object System.Drawing.Point(225, 120)
-        $cancelButton.Size = New-Object System.Drawing.Size(100, 30)
-        $cancelButton.Text = "Skip"
-        $cancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-        $form.Controls.Add($cancelButton)
-        $form.CancelButton = $cancelButton
-
-        # Validate name when text changes
-        $textBox.Add_TextChanged({
-            $newName = $textBox.Text
-            if ($newName -match '\s') {
-                $statusLabel.Text = "Machine name cannot contain spaces"
-                $okButton.Enabled = $false
-            } elseif ($newName.Length -eq 0) {
-                $statusLabel.Text = "Machine name cannot be empty"
-                $okButton.Enabled = $false
-            } elseif ($newName -notmatch '^[a-zA-Z0-9\-]+$') {
-                $statusLabel.Text = "Only letters, numbers, and hyphens are allowed"
-                $okButton.Enabled = $false
-            } else {
-                $statusLabel.Text = ""
-                $okButton.Enabled = $true
-            }
-        })
-
-        # Additional form setup before showing
-        $form.Add_Shown({
-            # Set focus to the form
-            $form.Activate()
-            $form.Focus()
-            
-            # Delay to ensure other operations are complete
-            Start-Sleep -Milliseconds 100
-            
-            # These force the window to be on top and active
-            [ForegroundWindow]::BringWindowToTop($form.Handle)
-            [ForegroundWindow]::SetForegroundWindow($form.Handle)
-            [ForegroundWindow]::ShowWindow($form.Handle, 5) # SW_SHOW
-            
-            # Flash the window to get attention
-            [ForegroundWindow]::FlashWindow($form.Handle, $true)
-            
-            # Set window as topmost via the Windows API
-            [ForegroundWindow]::SetWindowLong($form.Handle, [ForegroundWindow]::GWL_EXSTYLE, 
-                [ForegroundWindow]::WS_EX_TOPMOST)
-        })
-
-        # Show the form
-        $result = $form.ShowDialog()
-
-        # If OK was clicked and the name is different
-        if ($result -eq [System.Windows.Forms.DialogResult]::OK -and $textBox.Text -ne $env:COMPUTERNAME) {
-            $newName = $textBox.Text
-            
-            # Validate name
-            if ($newName -match '^[a-zA-Z0-9\-]{1,15}$') {
-                # Rename the machine
-                Rename-Computer -NewName $newName -Force
-                Write-Log "Machine renamed to: $newName (requires restart)"
-                
-                # Create a topmost message box for confirmation
-                $confirmBox = New-Object System.Windows.Forms.Form
-                $confirmBox.TopMost = $true
-                [System.Windows.Forms.MessageBox]::Show(
-                    $confirmBox,
-                    "Computer has been renamed to '$newName'. Changes will take effect after restart.",
-                    "Rename Successful",
-                    [System.Windows.Forms.MessageBoxButtons]::OK,
-                    [System.Windows.Forms.MessageBoxIcon]::Information
-                )
-                Write-TaskComplete
-            } else {
-                Write-Log "Invalid Machine name entered: $newName"
-                
-                # Create a topmost message box for error
-                $errorBox = New-Object System.Windows.Forms.Form
-                $errorBox.TopMost = $true
-                [System.Windows.Forms.MessageBox]::Show(
-                    $errorBox,
-                    "Invalid Machine name. Rename skipped.", 
-                    "Rename Failed", 
-                    [System.Windows.Forms.MessageBoxButtons]::OK, 
-                    [System.Windows.Forms.MessageBoxIcon]::Error
-                )
-                Write-Host " skipped - invalid name." -ForegroundColor Yellow
-            }
-        } else {
-            Write-Log "Machine rename skipped by user"
-            Write-Host " skipped." -ForegroundColor Yellow
-        }
-    } catch {
-        Write-Host " failed: $_" -ForegroundColor Red
-        Write-Log "Error in computer rename process: $_"
-    }
-}
-#>
 
 ############################################################################################################
 #                                           Baseline Summary                                               #
@@ -2115,7 +2037,6 @@ $footerBorder
 Add-Content -Path $LogFile -Value $footer
 
 Read-Host -Prompt "Press enter to exit"
-Stop-Process -Id $PID -Force
-
-
+Clear-HostFancily -Mode Falling -Speed 3.0
+#Stop-Process -Id $PID -Force
 

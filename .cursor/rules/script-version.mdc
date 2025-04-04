@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+When i update the $ScriptVersion value, update the version number in the banner at the top of the script and also the version value in .NOTES.
+- You can @ files here
+- You can use markdown but dont have to
