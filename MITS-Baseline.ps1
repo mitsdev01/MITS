@@ -1,7 +1,8 @@
 ############################################################################################################
-#                                     MITS - New Workstation Baseline Script                                #
-#                                                 Version 12.0.6l                                            #
+#                                     MITS - New Workstation Baseline Script                               #
+#                                                 Version 12.0.6l                                          #
 ############################################################################################################
+#region Synopsis
 <#
 .SYNOPSIS
     Automates the configuration and deployment of a standardized Windows workstation environment.
