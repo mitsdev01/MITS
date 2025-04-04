@@ -111,10 +111,10 @@ function Print-Center {
 
 # Display header
 Clear-Host
-Write-Host ("=" * [Console]::BufferWidth) -ForegroundColor Green
+Write-Host ("=" * [Console]::BufferWidth) -ForegroundColor Red
 Print-Center "MITS - New Workstation Baseline Launcher"
 Print-Center "Version $ScriptVersion" "Yellow"
-Write-Host ("=" * [Console]::BufferWidth) -ForegroundColor Green
+Write-Host ("=" * [Console]::BufferWidth) -ForegroundColor Red
 Write-Host ""
 
 Write-Log "Rename and Baseline script started"
