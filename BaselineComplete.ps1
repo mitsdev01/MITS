@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - Workstation Baseline Verification                             #
-#                                                 Version 2.0.1                                          #
+#                                                 Version 2.0.2                                          #
 ############################################################################################################
 #region Synopsis
 <#
@@ -23,7 +23,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        2.0.1
+    Version:        2.0.2
     Author:         Bill Ulrich
     Creation Date:  3/25/2025
     Requires:       Administrator privileges
@@ -41,7 +41,7 @@
 
 Clear-Host
 
-$ScriptVersion = "2.0.1"
+$ScriptVersion = "2.0.2"
 $ProgressPreference = "SilentlyContinue" 
 
 
