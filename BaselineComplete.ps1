@@ -46,6 +46,19 @@ $ProgressPreference = "SilentlyContinue"
 $WarningPreference = "SilentlyContinue"
 $ErrorActionPreference = "Continue"
 
+# Add the required Win32 API functions
+Add-Type -TypeDefinition @"
+    using System;
+    using System.Runtime.InteropServices;
+    
+    namespace Win32 {
+        public class User32 {
+            [DllImport("user32.dll", SetLastError = true)]
+            public static extern bool SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+        }
+    }
+"@ -ErrorAction SilentlyContinue
+
 function Print-Middle($Message, $Color = "White") {
     # Get the console width
     $consoleWidth = [System.Console]::BufferWidth
@@ -63,41 +76,6 @@ function Print-Middle($Message, $Color = "White") {
     
     # Output with given color
     Write-Host $paddedMessage -ForegroundColor $Color
-}
-
-# Title Display using Print-Middle
-$Padding = ("=" * [System.Console]::BufferWidth)
-Write-Host -ForegroundColor Red $Padding
-Print-Middle "MITS - Workstation Baseline Verification" "Yellow"
-Print-Middle "Version $ScriptVersion" "Yellow"
-Write-Host -ForegroundColor Red $Padding
-Write-Host ""
-
-# Check definitions status early
-Write-Host "Definitions: " -NoNewline
-try {
-    $avCheck = Get-WmiObject -Namespace "root\SecurityCenter2" -Class AntiVirusProduct -ErrorAction Stop | Select-Object -First 1
-    if ($avCheck) {
-        # Decode status based on SecurityCenter2 standard codes
-        $statusCode = $avCheck.productState
-        $statusHex = $statusCode.ToString("X6")
-        $dStatus = $statusHex.Substring(4, 2)
-        
-        $upToDate = if ($dStatus -eq "00") { $true } else { $false }
-        
-        if ($upToDate) {
-            Write-Host "Up to date" -ForegroundColor Green
-        }
-        else {
-            Write-Host "Out of date" -ForegroundColor Red
-        }
-    }
-    else {
-        Write-Host "Unknown" -ForegroundColor Yellow
-    }
-}
-catch {
-    Write-Host "Unknown" -ForegroundColor Yellow
 }
 
 # Function definitions
@@ -141,23 +119,10 @@ function Write-SectionHeader {
     
     Write-Host "`n"
     $headerLine = "-" * [System.Console]::BufferWidth
-    Write-Host -ForegroundColor Green $headerLine
+    Write-Host -ForegroundColor Red $headerLine
     Print-Middle $Title "Yellow"
-    Write-Host -ForegroundColor Green $headerLine
+    Write-Host -ForegroundColor Red $headerLine
 }
-
-# Add the required Win32 API functions
-Add-Type -TypeDefinition @"
-    using System;
-    using System.Runtime.InteropServices;
-    
-    namespace Win32 {
-        public class User32 {
-            [DllImport("user32.dll", SetLastError = true)]
-            public static extern bool SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
-        }
-    }
-"@ -ErrorAction SilentlyContinue
 
 function Move-ProcessWindowToTopRight {
     param (
@@ -268,7 +233,40 @@ function automateInstalled {
 }
 
 # Main Script Logic
+# Title Display using Print-Middle
+$Padding = ("=" * [System.Console]::BufferWidth)
+Write-Host -ForegroundColor Red $Padding
+Print-Middle "MITS - Workstation Baseline Verification" "Yellow"
+Print-Middle "Version $ScriptVersion" "Yellow"
+Write-Host -ForegroundColor Red $Padding
+Write-Host ""
 
+# Check definitions status early
+Write-Host "Definitions: " -NoNewline
+try {
+    $avCheck = Get-WmiObject -Namespace "root\SecurityCenter2" -Class AntiVirusProduct -ErrorAction Stop | Select-Object -First 1
+    if ($avCheck) {
+        # Decode status based on SecurityCenter2 standard codes
+        $statusCode = $avCheck.productState
+        $statusHex = $statusCode.ToString("X6")
+        $dStatus = $statusHex.Substring(4, 2)
+        
+        $upToDate = if ($dStatus -eq "00") { $true } else { $false }
+        
+        if ($upToDate) {
+            Write-Host "Up to date" -ForegroundColor Green
+        }
+        else {
+            Write-Host "Out of date" -ForegroundColor Red
+        }
+    }
+    else {
+        Write-Host "Unknown" -ForegroundColor Yellow
+    }
+}
+catch {
+    Write-Host "Unknown" -ForegroundColor Yellow
+}
 
 # Install and import CommonStuff module
 $moduleNames = @("CommonStuff", "FancyClearHost")
