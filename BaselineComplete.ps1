@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - Workstation Baseline Verification                             #
-#                                                 Version 2.0.0                                            #
+#                                                 Version 2.0.4                                          #
 ############################################################################################################
 #region Synopsis
 <#
@@ -23,7 +23,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        2.0.0
+    Version:        2.0.4
     Author:         Bill Ulrich
     Creation Date:  3/25/2025
     Requires:       Administrator privileges
@@ -41,7 +41,7 @@
 
 Clear-Host
 
-$ScriptVersion = "2.0.0"
+$ScriptVersion = "2.0.4"
 $ProgressPreference = "SilentlyContinue" 
 
 
@@ -287,13 +287,19 @@ catch {
 # System Information
 Write-SectionHeader "System Information"
 
-# Add spinner animation
-$spinner = @('/', '-', '\', '|')
+Write-Host "Collecting system information..." -NoNewline
 $spinnerIndex = 0
-[Console]::Write($spinner[$spinnerIndex])
+$spinner = @('/', '-', '\', '|')
 
 try {
-    # Run data collection in the background
+    # Show spinner while collecting data
+    for ($i = 0; $i -lt 10; $i++) {
+        Write-Host "`b$($spinner[$spinnerIndex % 4])" -NoNewline
+        $spinnerIndex++
+        Start-Sleep -Milliseconds 100
+    }
+    
+    # Collect data
     $computerInfo = Get-ComputerInfo
     $os = $computerInfo.OsName + " " + $computerInfo.OsVersion
     $installDate = $computerInfo.OsInstallDate
@@ -302,10 +308,9 @@ try {
     
     $formattedUptime = "{0} days, {1} hours, {2} minutes" -f $uptime.Days, $uptime.Hours, $uptime.Minutes
     
-    # Replace spinner with data
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    # Clear the spinner and write output on a new line
+    Write-Host "`b " -NoNewline
+    Write-Host " " -ForegroundColor Green
     
     Write-Host "Computer Name: " -NoNewline
     Write-Host $env:COMPUTERNAME -ForegroundColor Green
@@ -319,38 +324,33 @@ try {
     Write-Host $formattedUptime -ForegroundColor Green
 }
 catch {
-    # Replace spinner with error message
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    
+    # Clear the spinner and show error
+    Write-Host "`b " -NoNewline
+    Write-Host " ERROR" -ForegroundColor Red
     Write-Host "Could not retrieve complete system information: $($_.Exception.Message)" -ForegroundColor Yellow
 }
 
 # Installed Software
 Write-SectionHeader "Installed Software Report"
 
-# Add spinner animation
+Write-Host "Collecting software information..." -NoNewline
 $spinnerIndex = 0
-[Console]::Write($spinner[$spinnerIndex])
 
 try {
-    # Run data collection (simulate delay with multiple spinner updates)
-    for ($i = 0; $i -lt 5; $i++) {
-        [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-        $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
-        [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 50
+    # Show spinner while collecting data
+    for ($i = 0; $i -lt 8; $i++) {
+        Write-Host "`b$($spinner[$spinnerIndex % 4])" -NoNewline
+        $spinnerIndex++
+        Start-Sleep -Milliseconds 100
     }
     
     $Software = Get-InstalledSoftware | Where-Object { $_.DisplayName -ne $null } | 
                 Select-Object DisplayName, DisplayVersion |
                 Sort-Object DisplayName
     
-    # Replace spinner with data
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    # Clear the spinner and write output on a new line
+    Write-Host "`b " -NoNewline
+    Write-Host " " -ForegroundColor Green
     
     # Create a clean table without any headers
     $format = "{0,-50} {1,-25}"
@@ -368,36 +368,31 @@ try {
     }
 }
 catch {
-    # Replace spinner with error message
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    
+    # Clear the spinner and show error
+    Write-Host "`b " -NoNewline
+    Write-Host " ERROR" -ForegroundColor Red
     Write-Host "Error retrieving installed software: $($_.Exception.Message)" -ForegroundColor Red
 }
 
 # BitLocker Status
 Write-SectionHeader "BitLocker Encryption Configuration"
 
-# Add spinner animation
+Write-Host "Checking BitLocker status..." -NoNewline
 $spinnerIndex = 0
-[Console]::Write($spinner[$spinnerIndex])
 
 try {
-    # Run data collection with spinner animation
-    for ($i = 0; $i -lt 3; $i++) {
-        [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-        $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
-        [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 50
+    # Show spinner while collecting data
+    for ($i = 0; $i -lt 6; $i++) {
+        Write-Host "`b$($spinner[$spinnerIndex % 4])" -NoNewline
+        $spinnerIndex++
+        Start-Sleep -Milliseconds 100
     }
     
     $BitLockerVolume = Get-BitLockerVolume -MountPoint $env:SystemDrive -ErrorAction Stop
     
-    # Replace spinner with data
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    # Clear the spinner and write output on a new line
+    Write-Host "`b " -NoNewline
+    Write-Host " " -ForegroundColor Green
     
     if ($BitLockerVolume.ProtectionStatus -eq "On") {
         Write-Host "BitLocker Status: " -NoNewline
@@ -427,34 +422,29 @@ try {
     }
 }
 catch {
-    # Replace spinner with error message
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    
+    # Clear the spinner and show error
+    Write-Host "`b " -NoNewline
+    Write-Host " ERROR" -ForegroundColor Red
     Write-Host "Error retrieving BitLocker status: $($_.Exception.Message)" -ForegroundColor Red
 }
 
 # Domain/Azure AD Status
 Write-SectionHeader "Network Authentication Status"
 
-# Add spinner animation
+Write-Host "Checking domain status..." -NoNewline
 $spinnerIndex = 0
-[Console]::Write($spinner[$spinnerIndex])
 
 try {
-    # Run data collection with spinner animation
-    for ($i = 0; $i -lt 4; $i++) {
-        [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-        $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
-        [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 50
+    # Show spinner while collecting data
+    for ($i = 0; $i -lt 8; $i++) {
+        Write-Host "`b$($spinner[$spinnerIndex % 4])" -NoNewline
+        $spinnerIndex++
+        Start-Sleep -Milliseconds 100
     }
     
-    # Replace spinner with data
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    # Clear the spinner and write output on a new line
+    Write-Host "`b " -NoNewline
+    Write-Host " " -ForegroundColor Green
     
     # Get Domain Join Status
     Write-Host "Domain Status" -ForegroundColor Cyan
@@ -484,34 +474,29 @@ try {
     }
 }
 catch {
-    # Replace spinner with error message
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    
+    # Clear the spinner and show error
+    Write-Host "`b " -NoNewline
+    Write-Host " ERROR" -ForegroundColor Red
     Write-Host "Error retrieving domain/Azure AD information: $($_.Exception.Message)" -ForegroundColor Red
 }
 
 # Security Status
 Write-SectionHeader "Security Status"
 
-# Add spinner animation
+Write-Host "Checking antivirus status..." -NoNewline
 $spinnerIndex = 0
-[Console]::Write($spinner[$spinnerIndex])
 
 try {
-    # Run data collection with spinner animation
-    for ($i = 0; $i -lt 4; $i++) {
-        [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-        $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
-        [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 50
+    # Show spinner while collecting data
+    for ($i = 0; $i -lt 8; $i++) {
+        Write-Host "`b$($spinner[$spinnerIndex % 4])" -NoNewline
+        $spinnerIndex++
+        Start-Sleep -Milliseconds 100
     }
     
-    # Replace spinner with data
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+    # Clear the spinner and write output on a new line
+    Write-Host "`b " -NoNewline
+    Write-Host " " -ForegroundColor Green
     
     # Antivirus Products
     Write-Host "Antivirus Products" -ForegroundColor Cyan
@@ -555,35 +540,53 @@ try {
     }
 }
 catch {
-    # Replace spinner with error message
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    
+    # Clear the spinner and show error
+    Write-Host "`b " -NoNewline
+    Write-Host " ERROR" -ForegroundColor Red
     Write-Host "Error retrieving antivirus information: $($_.Exception.Message)" -ForegroundColor Yellow
 }
 
 # Windows Update section
+Write-SectionHeader "Windows Update Status"
+Write-Host "Checking for Windows Updates..." -NoNewline
+$spinnerIndex = 0
+
 try {
-    # Add spinner animation
-    $spinnerIndex = 0
-    [Console]::Write($spinner[$spinnerIndex])
-    
-    # Run data collection with spinner animation
-    for ($i = 0; $i -lt 3; $i++) {
-        [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-        $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
-        [Console]::Write($spinner[$spinnerIndex])
-        Start-Sleep -Milliseconds 50
+    # Show spinner while collecting data
+    for ($i = 0; $i -lt 6; $i++) {
+        Write-Host "`b$($spinner[$spinnerIndex % 4])" -NoNewline
+        $spinnerIndex++
+        Start-Sleep -Milliseconds 100
     }
     
-    # Replace spinner with data
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    
-    Write-Host "Windows Update Status" -ForegroundColor Cyan
+    # Collect Windows Update data
     $updateService = Get-Service -Name wuauserv
+    $updatesSession = $null
+    $pendingUpdates = $null
+    
+    if ($updateService.Status -eq "Running") {
+        try {
+            $updatesSession = New-Object -ComObject Microsoft.Update.Session
+            $updatesSearcher = $updatesSession.CreateUpdateSearcher()
+            
+            # Continue spinner while searching for updates
+            for ($i = 0; $i -lt 10; $i++) {
+                Write-Host "`b$($spinner[$spinnerIndex % 4])" -NoNewline
+                $spinnerIndex++
+                Start-Sleep -Milliseconds 100
+            }
+            
+            $pendingUpdates = $updatesSearcher.Search("IsInstalled=0").Updates
+        }
+        catch {
+            # Just capture the error but continue with the script
+            $updateError = $_.Exception.Message
+        }
+    }
+    
+    # Clear the spinner and write output on a new line
+    Write-Host "`b " -NoNewline
+    Write-Host " " -ForegroundColor Green
     
     Write-Host "Windows Update Service: " -NoNewline
     if ($updateService.Status -eq "Running") {
@@ -596,13 +599,12 @@ try {
     Write-Host "Startup Type: " -NoNewline
     Write-Host $updateService.StartType
     
-    # Get pending updates if the service is running
+    # Get pending updates if the service is running and we have results
     if ($updateService.Status -eq "Running") {
-        try {
-            $updatesSession = New-Object -ComObject Microsoft.Update.Session
-            $updatesSearcher = $updatesSession.CreateUpdateSearcher()
-            $pendingUpdates = $updatesSearcher.Search("IsInstalled=0").Updates
-            
+        if ($updateError) {
+            Write-Host "Could not check for updates: $updateError" -ForegroundColor Yellow
+        }
+        elseif ($pendingUpdates -ne $null) {
             Write-Host "Pending Updates: " -NoNewline
             if ($pendingUpdates.Count -gt 0) {
                 Write-Host "$($pendingUpdates.Count) updates available" -ForegroundColor Yellow
@@ -619,17 +621,16 @@ try {
                 Write-Host "None" -ForegroundColor Green
             }
         }
-        catch {
-            Write-Host "Could not check for updates: $($_.Exception.Message)" -ForegroundColor Yellow
+        else {
+            Write-Host "Pending Updates: " -NoNewline
+            Write-Host "Unknown" -ForegroundColor Yellow
         }
     }
 }
 catch {
-    # Replace spinner with error message
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    [Console]::Write(" ")
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    
+    # Clear the spinner and show error
+    Write-Host "`b " -NoNewline
+    Write-Host " ERROR" -ForegroundColor Red
     Write-Host "Error retrieving Windows Update information: $($_.Exception.Message)" -ForegroundColor Red
 }
 
@@ -637,12 +638,11 @@ catch {
 Write-SectionHeader "Power Configuration"
 
 try {
-    # Don't use spinner - just collect data directly
+    # Use a simpler approach for this section
     Write-Host "Collecting power plan information..." -ForegroundColor Gray
     
     $powerCfg = powercfg /list
     $activePlan = ($powerCfg | Select-String -Pattern "\*").Line
-    #Write-Host "Power Plan: " -NoNewline
     Write-Host $activePlan.Trim() -ForegroundColor Cyan
     
     # Check sleep settings with error handling
@@ -693,22 +693,19 @@ catch {
 # Final Summary
 Write-SectionHeader "Baseline Completion Status"
 
-# Add spinner animation
+Write-Host "Calculating baseline score..." -NoNewline
 $spinnerIndex = 0
-[Console]::Write($spinner[$spinnerIndex])
 
-# Run data collection with spinner animation
-for ($i = 0; $i -lt 5; $i++) {
-    [Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-    $spinnerIndex = ($spinnerIndex + 1) % $spinner.Length
-    [Console]::Write($spinner[$spinnerIndex])
-    Start-Sleep -Milliseconds 50
+# Show spinner while calculating
+for ($i = 0; $i -lt 10; $i++) {
+    Write-Host "`b$($spinner[$spinnerIndex % 4])" -NoNewline
+    $spinnerIndex++
+    Start-Sleep -Milliseconds 100
 }
 
-# Replace spinner with data
-[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
-[Console]::Write(" ")
-[Console]::SetCursorPosition([Console]::CursorLeft - 1, [Console]::CursorTop)
+# Clear the spinner and write output on a new line
+Write-Host "`b " -NoNewline
+Write-Host " " -ForegroundColor Green
 
 # Determine overall status
 $totalTests = 6 # BitLocker, RMM, Office, Antivirus, Windows Update, Power Settings
@@ -771,5 +768,5 @@ else {
 
 Write-Host "`nReport generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
 Read-Host -Prompt "Press enter to exit"
-Clear-Host -Fancy -Mode Falling -Speed 0.5
-#Stop-Process -Id $PID -Force
+Clear-HostFancily -Mode Falling -Speed 3.0
+Stop-Process -Id $PID -Force
