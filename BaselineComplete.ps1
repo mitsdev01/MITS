@@ -547,7 +547,8 @@ catch {
 }
 
 # Windows Update section
-Write-Host "Checking Windows Update status..." -NoNewline
+Write-SectionHeader "Windows Update Status"
+Write-Host "Checking for Windows Updates..." -NoNewline
 $spinnerIndex = 0
 
 try {
@@ -558,12 +559,34 @@ try {
         Start-Sleep -Milliseconds 100
     }
     
+    # Collect Windows Update data
+    $updateService = Get-Service -Name wuauserv
+    $updatesSession = $null
+    $pendingUpdates = $null
+    
+    if ($updateService.Status -eq "Running") {
+        try {
+            $updatesSession = New-Object -ComObject Microsoft.Update.Session
+            $updatesSearcher = $updatesSession.CreateUpdateSearcher()
+            
+            # Continue spinner while searching for updates
+            for ($i = 0; $i -lt 10; $i++) {
+                Write-Host "`b$($spinner[$spinnerIndex % 4])" -NoNewline
+                $spinnerIndex++
+                Start-Sleep -Milliseconds 100
+            }
+            
+            $pendingUpdates = $updatesSearcher.Search("IsInstalled=0").Updates
+        }
+        catch {
+            # Just capture the error but continue with the script
+            $updateError = $_.Exception.Message
+        }
+    }
+    
     # Clear the spinner and write output on a new line
     Write-Host "`b " -NoNewline
     Write-Host " " -ForegroundColor Green
-    
-    Write-Host "Windows Update Status" -ForegroundColor Cyan
-    $updateService = Get-Service -Name wuauserv
     
     Write-Host "Windows Update Service: " -NoNewline
     if ($updateService.Status -eq "Running") {
@@ -576,13 +599,12 @@ try {
     Write-Host "Startup Type: " -NoNewline
     Write-Host $updateService.StartType
     
-    # Get pending updates if the service is running
+    # Get pending updates if the service is running and we have results
     if ($updateService.Status -eq "Running") {
-        try {
-            $updatesSession = New-Object -ComObject Microsoft.Update.Session
-            $updatesSearcher = $updatesSession.CreateUpdateSearcher()
-            $pendingUpdates = $updatesSearcher.Search("IsInstalled=0").Updates
-            
+        if ($updateError) {
+            Write-Host "Could not check for updates: $updateError" -ForegroundColor Yellow
+        }
+        elseif ($pendingUpdates -ne $null) {
             Write-Host "Pending Updates: " -NoNewline
             if ($pendingUpdates.Count -gt 0) {
                 Write-Host "$($pendingUpdates.Count) updates available" -ForegroundColor Yellow
@@ -599,8 +621,9 @@ try {
                 Write-Host "None" -ForegroundColor Green
             }
         }
-        catch {
-            Write-Host "Could not check for updates: $($_.Exception.Message)" -ForegroundColor Yellow
+        else {
+            Write-Host "Pending Updates: " -NoNewline
+            Write-Host "Unknown" -ForegroundColor Yellow
         }
     }
 }
