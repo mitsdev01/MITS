@@ -74,7 +74,7 @@ This will perform the complete baseline process including:
 - Bloatware removal
 
 
-## Script Breakdown
+## Process
 
 ### MITS-BaselineLauncher.ps1
 
@@ -133,8 +133,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Author
-
-Bill Ulrich
-Advance Business Systems
