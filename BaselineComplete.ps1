@@ -746,4 +746,4 @@ else {
 Write-Host "`nReport generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
 Read-Host -Prompt "Press enter to exit"
 Clear-HostFancily -Mode Falling -Speed 3.0
-#Stop-Process -Id $PID -Force
+Stop-Process -Id $PID -Force
