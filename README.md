@@ -74,7 +74,7 @@ This will perform the complete baseline process including:
 - Bloatware removal
 
 
-## Script Breakdown
+## Process
 
 ### MITS-BaselineLauncher.ps1
 
