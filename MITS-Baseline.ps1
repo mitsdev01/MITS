@@ -45,7 +45,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Initial setup and version
-$ScriptVersion = "12.0.7"
+$ScriptVersion = "12.0.8"
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $TempFolder = "C:\temp"
@@ -59,15 +59,15 @@ Set-ExecutionPolicy RemoteSigned -Force *> $null
 $null = [Console]::TreatControlCAsInput = $true
 # Register termination handler
 $null = Register-EngineEvent -SourceIdentifier ([System.Management.Automation.PsEngineEvent]::Exiting) -Action {
-    Write-Host "`n`nScript termination detected. Performing cleanup..." -ForegroundColor Yellow
+    #Write-Host "`n`nScript termination detected. Performing cleanup..." -ForegroundColor Yellow
     # Create WakeLock exit flag to stop the WakeLock script if it's running
     if (-not (Test-Path "c:\temp\wakelock.flag")) {
         try {
             New-Item -Path "c:\temp\wakelock.flag" -ItemType File -Force | Out-Null
-            Write-Host "WakeLock flag created to stop background script." -ForegroundColor Cyan
+            #Write-Host "WakeLock flag created to stop background script." -ForegroundColor Cyan
         }
         catch {
-            Write-Host "Failed to create WakeLock flag: $_" -ForegroundColor Red
+            #Write-Host "Failed to create WakeLock flag: $_" -ForegroundColor Red
         }
     }
     
