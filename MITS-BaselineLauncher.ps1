@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                   MITS - Rename and Baseline Launcher                                     #
-#                                                 Version 1.0.6                                            #
+#                                                 Version 1.0.7                                            #
 ############################################################################################################
 #region Synopsis
 <#
@@ -21,7 +21,7 @@
     Default: current user
 
 .NOTES
-    Version:        1.0.6
+    Version:        1.0.7
     Author:         Bill Ulrich
     Creation Date:  4/1/2025
     Requires:       Administrator privileges
@@ -52,7 +52,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
-$ScriptVersion = "1.0.6"
+$ScriptVersion = "1.0.7"
 
 #Start-Transcript -Path "c:\temp\baseline-launcher.log"
 
