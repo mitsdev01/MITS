@@ -67,10 +67,10 @@ function Print-Middle($Message, $Color = "White") {
 
 # Title Display using Print-Middle
 $Padding = ("=" * [System.Console]::BufferWidth)
-Write-Host -ForegroundColor Green $Padding
+Write-Host -ForegroundColor Red $Padding
 Print-Middle "MITS - Workstation Baseline Verification" "Yellow"
 Print-Middle "Version $ScriptVersion" "Yellow"
-Write-Host -ForegroundColor Green $Padding
+Write-Host -ForegroundColor Red $Padding
 Write-Host ""
 
 # Check definitions status early
