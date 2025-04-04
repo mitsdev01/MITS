@@ -58,7 +58,10 @@ if (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue) {
 }
 
 $ProgressPreference = 'SilentlyContinue'
-Install-Module -Name FancyClearHost -Force -Scope CurrentUser -ErrorAction SilentlyContinue | Out-Null
+if (-not (Get-Module -ListAvailable -Name FancyClearHost)) {
+    Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
+    Install-Module -Name FancyClearHost -Force
+}
 
 # Restore the original execution policy
 Set-ExecutionPolicy $originalExecutionPolicy -Scope Process -Force
