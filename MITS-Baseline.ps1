@@ -1,6 +1,6 @@
 ############################################################################################################
 #                                     MITS - New Workstation Baseline Script                               #
-#                                                 Version 12.0.7                                          #
+#                                                 Version 12.0.8                                          #
 ############################################################################################################
 #region Synopsis
 <#
@@ -22,7 +22,7 @@
     This script does not accept parameters.
 
 .NOTES
-    Version:        12.0.7
+    Version:        12.0.8
     Author:         Bill Ulrich
     Creation Date:  4/2/2025
     Requires:       Administrator privileges
