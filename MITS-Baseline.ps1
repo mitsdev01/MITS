@@ -2038,5 +2038,5 @@ Add-Content -Path $LogFile -Value $footer
 
 Read-Host -Prompt "Press enter to exit"
 Clear-HostFancily -Mode Falling -Speed 3.0
-#Stop-Process -Id $PID -Force
+Stop-Process -Id $PID -Force
 
