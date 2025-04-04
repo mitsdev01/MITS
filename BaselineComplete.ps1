@@ -43,7 +43,8 @@ Clear-Host
 
 $ScriptVersion = "2.0.4"
 $ProgressPreference = "SilentlyContinue" 
-
+$WarningPreference = "SilentlyContinue"
+$ErrorActionPreference = "Continue"
 
 function Print-Middle($Message, $Color = "White") {
     # Get the console width
@@ -257,10 +258,17 @@ function Show-SimpleSpinner {
     return $result
 }
 
+function automateInstalled {
+    if (Test-Path "C:\Windows\LTSvc\LTSvc.exe") {
+        return $true
+    }
+    else {
+        return $false
+    }
+}
+
 # Main Script Logic
-# Set up variables and preferences
-$WarningPreference = "SilentlyContinue"
-$ErrorActionPreference = "Continue"
+
 
 # Install and import CommonStuff module
 $moduleNames = @("CommonStuff", "FancyClearHost")
@@ -717,7 +725,7 @@ if (($BitLockerVolume -ne $null) -and ($BitLockerVolume.ProtectionStatus -eq "On
 }
 
 # RMM
-if ($dattoInstalled) {
+if ($automateInstalled) {
     $passedTests++
 }
 
