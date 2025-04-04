@@ -86,14 +86,14 @@ A streamlined launcher script that handles the initial setup:
 - After restart, the scheduled task runs once and self-deletes
 
 Access it directly via: `irm bit.ly/mits-baseline-launcher | iex`
-![Launcher Screenshot](images/SOS-Rename.gif)
+![Launcher Screenshot](images/MITS-Launcher2.gif)
 
 ### MITS-Baseline.ps1 (Main Script)
 
 The primary script that performs all baseline operations. It includes comprehensive workstation configuration and ensures systems are properly secured and optimized.
 
 Access it directly via: `irm bit.ly/mits-baseline | iex`
-![Launcher Screenshot](images/SOS-Baseline.gif)
+![Launcher Screenshot](images/MITS-Baseline2.gif)
 
 ### BaselineComplete.ps1
 
@@ -105,12 +105,12 @@ Generates a detailed verification report showing the current state of a workstat
 - Security and antivirus status
 - Power configuration
 - Overall baseline score
-![Launcher Screenshot](images/SOS-Verification.gif)
+![Launcher Screenshot](images/MITS-Verification2.gif)
 
 ### Update_Windows.ps1
 
 Automates the process of checking for and installing Windows updates using the PSWindowsUpdate module.
-![Launcher Screenshot](images/SOS-Update.gif)
+![Launcher Screenshot](images/MITS-Update2.gif)
 
 ### Check-Modules.ps1
 
