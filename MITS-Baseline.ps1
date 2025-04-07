@@ -1393,16 +1393,38 @@ if (Get-Service $agentName -ErrorAction SilentlyContinue) {
     [Console]::Write(" done.`n")
     [Console]::ResetColor()    
     Write-Delayed "Installing ConnectWise Automate Agent..." -NewLine:$false
+    
+    # Start the installation process
     $process = Start-Process msiexec.exe -ArgumentList "/I $file /quiet" -PassThru
-    $process.WaitForExit()
+    
+    # Display spinner while waiting for installation to complete
+    $spinner = @('/', '-', '\', '|')
+    $spinnerIndex = 0
+    
+    # Continue spinning until process completes
+    while (!$process.HasExited) {
+        [Console]::Write($spinner[$spinnerIndex % $spinner.Length])
+        Start-Sleep -Milliseconds 250
+        [Console]::Write("`b")
+        $spinnerIndex++
+    }
+    
     if ($process.ExitCode -eq 0) {
-        # Wait for the installation to complete
-        Start-Sleep -Seconds 60
+        # Display spinner while waiting for services to fully initialize
+        for ($i = 0; $i -lt 60; $i++) {
+            [Console]::Write($spinner[$spinnerIndex % $spinner.Length])
+            Start-Sleep -Milliseconds 1000
+            [Console]::Write("`b")
+            $spinnerIndex++
+        }
+        
+        # Success - installation complete
         [Console]::ForegroundColor = [System.ConsoleColor]::Green
         [Console]::Write(" done.")
         [Console]::ResetColor()
         [Console]::WriteLine()    
     } else {
+        # Failure - installation failed
         [Console]::ForegroundColor = [System.ConsoleColor]::Red
         [Console]::Write(" failed.")
         [Console]::ResetColor()
@@ -1420,7 +1442,7 @@ if ($null -ne $service) {
         # Get the agent ID
         $agentId = Get-ItemProperty -Path $agentIdKeyPath -Name $agentIdValueName -ErrorAction SilentlyContinue
         if ($null -ne $agentId) {
-            $LTAID = "`nConnectWise Automate Agent ID:"
+            $LTAID = "ConnectWise Automate Agent ID:"
             foreach ($Char in $LTAID.ToCharArray()) {
                 [Console]::Write("$Char")
                 Start-Sleep -Milliseconds 30
