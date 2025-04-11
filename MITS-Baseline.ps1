@@ -45,7 +45,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Initial setup and version
-$ScriptVersion = "12.0.8"
+$ScriptVersion = "12.0.9"
 $ErrorActionPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $TempFolder = "C:\temp"
@@ -1640,7 +1640,7 @@ if ($SWNE) {
     [Console]::ResetColor()
     [Console]::WriteLine()   
 } else {
-    $NEFilePath = "c:\temp\NXSetupU-x64-10.3.0.exe"
+    $NEFilePath = "c:\temp\NXSetupU-x64-10.3.1.exe"
     if (-not (Test-Path $NEFilePath)) {
         $NEURL = "https://axcientrestore.blob.core.windows.net/win11/NXSetupU-x64-10.3.1.exe"
         Invoke-WebRequest -OutFile $NEFilePath -Uri $NEURL -UseBasicParsing
