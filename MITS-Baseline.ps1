@@ -1648,7 +1648,7 @@ if ($SWNE) {
     # Validate successful download by checking the file size
     $NEGUI = "C:\Program Files (x86)\SonicWall\SSL-VPN\NetExtender\NEGui.exe"
     $FileSize = (Get-Item $NEFilePath).Length
-    $ExpectedSize = 8234392 # in bytes 
+    $ExpectedSize = 8226288 # in bytes 
     if ($FileSize -eq $ExpectedSize) {
         Write-Delayed "Installing Sonicwall NetExtender..." -NewLine:$false
         start-process -filepath $NEFilePath /S -Wait
