@@ -1642,7 +1642,7 @@ if ($SWNE) {
 } else {
     $NEFilePath = "c:\temp\NXSetupU-x64-10.3.0.exe"
     if (-not (Test-Path $NEFilePath)) {
-        $NEURL = "https://advancestuff.hostedrmm.com/labtech/transfer/installers/NXSetupU-x64-10.3.0.exe"
+        $NEURL = "https://axcientrestore.blob.core.windows.net/win11/NXSetupU-x64-10.3.1.exe"
         Invoke-WebRequest -OutFile $NEFilePath -Uri $NEURL -UseBasicParsing
     }
     # Validate successful download by checking the file size

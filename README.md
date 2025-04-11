@@ -76,7 +76,7 @@ This will perform the complete baseline process including:
 
 ## Process
 
-### MITS-BaselineLauncher.ps1
+### MITS-Baseline-Launcher.ps1
 
 A streamlined launcher script that handles the initial setup:
 - Presents a user-friendly interface to rename the computer
