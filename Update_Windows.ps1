@@ -41,6 +41,13 @@
 
 Clear-Host
 
+# Create temp directory and start transcript
+if (-not (Test-Path "C:\temp")) {
+    New-Item -Path "C:\temp" -ItemType Directory -Force | Out-Null
+}
+
+Start-Transcript -Path "C:\temp\update-windows.log" -Append
+
 # Check if NuGet provider is installed
 if (!(Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
     # Install NuGet provider
@@ -55,37 +62,38 @@ if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
 try {
     Import-Module PSWindowsUpdate -ErrorAction Stop
 } catch {
-    Write-Host "Error importing PSWindowsUpdate module: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Error importing PSWindowsUpdate module: $($_.Exception.Message)"
     exit 1
 }
 
 # Check for updates
-Write-Host "Checking for updates..." -ForegroundColor Cyan
+Write-Host "Checking for updates..."
 try {
     $availableUpdates = Get-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot -ErrorAction Stop
     
     # Display the total number of updates found
     $totalUpdates = $availableUpdates.Count
-    Write-Host "Total Updates available: $totalUpdates" -ForegroundColor Yellow
+    Write-Host "Total Updates available: $totalUpdates"
     Start-Sleep -Seconds 3
 
     # Install updates
     if ($totalUpdates -gt 0) {
-        Write-Host "Starting Windows Update installation..." -ForegroundColor Cyan
+        Write-Host "Starting Windows Update installation..."
         try {
             # Install all updates at once instead of one by one
             Install-WindowsUpdate -AcceptAll -IgnoreReboot -AutoReboot:$false -Confirm:$false -ErrorAction Stop
-            Write-Host "Windows Update installation completed successfully!" -ForegroundColor Green
+            Write-Host "Windows Update installation completed successfully!" 
         } catch {
-            Write-Host "Error during update installation: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "Error during update installation: $($_.Exception.Message)" 
             exit 1
         }
     } else {
-        Write-Host "No updates available." -ForegroundColor Green
+        Write-Host "No updates available."
     }
 } catch {
-    Write-Host "Error checking for updates: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Error checking for updates: $($_.Exception.Message)" 
     exit 1
 }
 Write-Host " "
-Write-Host "`nScript completed. Please restart your computer if required." -ForegroundColor Cyan
+Write-Host "`nScript completed. Please restart your computer if required."
+Stop-Transcript
