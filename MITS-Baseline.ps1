@@ -233,6 +233,32 @@ function Move-ProcessWindowToTopRight {
     }
 }
 
+function Test-NinjaAgentInstalled {
+    param([ref]$displayVersion)
+    $found = $false
+    foreach ($view in @([Microsoft.Win32.RegistryView]::Registry64, [Microsoft.Win32.RegistryView]::Registry32)) {
+        $baseKey = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine, $view)
+        $uninstallKey = $baseKey.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall")
+        foreach ($subKeyName in $uninstallKey.GetSubKeyNames()) {
+            $subKey = $uninstallKey.OpenSubKey($subKeyName)
+            if ($subKey) {
+                $displayName = $subKey.GetValue("DisplayName")
+                if ($displayName -eq "NinjaRMMAgent") {
+                    $found = $true
+                    $displayVersion.Value = $subKey.GetValue("DisplayVersion")
+                    $subKey.Close()
+                    break
+                }
+                $subKey.Close()
+            }
+        }
+        $uninstallKey.Close()
+        $baseKey.Close()
+        if ($found) { break }
+    }
+    return $found
+}
+
 function Is-Windows11 {
     $osInfo = Get-WmiObject -Class Win32_OperatingSystem
     $osVersion = $osInfo.Version
@@ -1359,109 +1385,29 @@ Write-Log "Disabled unnecessary scheduled tasks"
 #                                                                                                          #
 ############################################################################################################
 #region RMM Install
-
-# ConnectWise Automate Agent Installation
-$file = 'c:\temp\Warehouse-Agent_Install.MSI'
-$agentName = "LTService"
-$agentPath = "C:\Windows\LTSvc\"
-$installerUri = "https://advancestuff.hostedrmm.com/labtech/transfer/installers/Warehouse-Agent_Install.MSI"
-$agentIdKeyPath = "HKLM:\SOFTWARE\LabTech\Service"
-$agentIdValueName = "ID"
-
-# Check for existing LabTech agent
-if (Get-Service $agentName -ErrorAction SilentlyContinue) {
-    [Console]::ForegroundColor = [System.ConsoleColor]::Cyan
-    [Console]::Write("Existing ConnectWise Automate installation found.")
-} elseif (Test-Path $agentPath) {
-    [Console]::ForegroundColor = [System.ConsoleColor]::Red
-    Write-Delayed "ConnectWise Automate agent files are present, but the service is not installed." -NewLine:$false
-    [Console]::ResetColor() 
-    [Console]::WriteLine()
+# NinjaOne Agent Installation
+Write-Log "Checking for NinjaOne agent..."
+$NinjaAgentMSI = "$TempFolder\NinjaOne-Agent-NewDevices-MainOffice-Auto.msi"
+$NinjaAgentURL = 'https://axcientrestore.blob.core.windows.net/win11/NinjaOne-Agent-NewDevices-MainOffice-Auto.msi'
+$displayVersion = ""
+if (Test-NinjaAgentInstalled -displayVersion ([ref]$displayVersion)) {
+    Write-Log "NinjaOne agent already installed. Version: $displayVersion"
 } else {
-    Write-Delayed "Downloading ConnectWise Automate Agent..." -NewLine:$false
+    Write-Log "Downloading NinjaOne agent..."
     try {
-        Invoke-WebRequest -Uri $installerUri -OutFile $file
-        Start-Sleep -Seconds 1
-    } catch {
-        [Console]::ForegroundColor = [System.ConsoleColor]::Red
-        Write-Delayed "ConnectWise Automate agent download failed!" -NewLine:$true
-        [Console]::ResetColor() 
-        [Console]::WriteLine()
-        exit
-    }
-    [Console]::ForegroundColor = [System.ConsoleColor]::Green
-    [Console]::Write(" done.`n")
-    [Console]::ResetColor()    
-    Write-Delayed "Installing ConnectWise Automate Agent..." -NewLine:$false
-    
-    # Start the installation process
-    $process = Start-Process msiexec.exe -ArgumentList "/I $file /quiet" -PassThru
-    
-    # Display spinner while waiting for installation to complete
-    $spinner = @('/', '-', '\', '|')
-    $spinnerIndex = 0
-    
-    # Continue spinning until process completes
-    while (!$process.HasExited) {
-        [Console]::Write($spinner[$spinnerIndex % $spinner.Length])
-        Start-Sleep -Milliseconds 250
-        [Console]::Write("`b")
-        $spinnerIndex++
-    }
-    
-    if ($process.ExitCode -eq 0) {
-        # Display spinner while waiting for services to fully initialize
-        for ($i = 0; $i -lt 60; $i++) {
-            [Console]::Write($spinner[$spinnerIndex % $spinner.Length])
-            Start-Sleep -Milliseconds 1000
-            [Console]::Write("`b")
-            $spinnerIndex++
-        }
-        
-        # Success - installation complete
-        [Console]::ForegroundColor = [System.ConsoleColor]::Green
-        [Console]::Write(" done.")
-        [Console]::ResetColor()
-        [Console]::WriteLine()    
-    } else {
-        # Failure - installation failed
-        [Console]::ForegroundColor = [System.ConsoleColor]::Red
-        [Console]::Write(" failed.")
-        [Console]::ResetColor()
-        [Console]::WriteLine()    
-        exit
-    }
-}
-
-$agentServiceName = "LTService" # The name of the service installed by the ConnectWise Automate agent
-
-# Check for the service
-$service = Get-Service -Name $agentServiceName -ErrorAction SilentlyContinue
-if ($null -ne $service) {
-    if (Test-Path $agentIdKeyPath) {
-        # Get the agent ID
-        $agentId = Get-ItemProperty -Path $agentIdKeyPath -Name $agentIdValueName -ErrorAction SilentlyContinue
-        if ($null -ne $agentId) {
-            $LTAID = "ConnectWise Automate Agent ID:"
-            foreach ($Char in $LTAID.ToCharArray()) {
-                [Console]::Write("$Char")
-                Start-Sleep -Milliseconds 30
-            }
-            Start-Sleep -Seconds 1
-            [Console]::ForegroundColor = [System.ConsoleColor]::Cyan
-            [Console]::Write(" $($agentId.$agentIdValueName)")
-            [Console]::ResetColor()
-            [Console]::WriteLine()    
+        Invoke-WebRequest -Uri $NinjaAgentURL -OutFile $NinjaAgentMSI -ErrorAction Stop
+        Write-Log "Download complete. Installing..."
+        $process = Start-Process msiexec.exe -ArgumentList "/I $NinjaAgentMSI /quiet" -Wait -PassThru
+        if ($process.ExitCode -eq 0) {
+            Write-Log "NinjaOne agent installed successfully."
         } else {
-            [Console]::ForegroundColor = [System.ConsoleColor]::Red
-            Write-Delayed "ConnectWise Automate agent ID not found." -NewLine:$true
-            [Console]::ResetColor()
+            Write-Log "NinjaOne agent installation failed with exit code $($process.ExitCode)."
+            exit 1
         }
-} else {
-    [Console]::ForegroundColor = [System.ConsoleColor]::Red
-    Write-Delayed "ConnectWise Automate agent is not installed." -NewLine:$true
-            [Console]::ResetColor()
-}
+    } catch {
+        Write-Log "Failed to download or install NinjaOne agent: $_"
+        exit 1
+    }
 }
 #endregion RMMDeployment
 
@@ -2061,4 +2007,5 @@ Add-Content -Path $LogFile -Value $footer
 Read-Host -Prompt "Press enter to exit"
 Clear-HostFancily -Mode Falling -Speed 3.0
 Stop-Process -Id $PID -Force
+
 
